@@ -1,0 +1,29 @@
+\usepackage{xcolor} 
+\newcommand{\dummytext}[1]{\textcolor{gray}{\lipsum[#1]}}
+
+\newcommand{\customtodo}[1]{\todo[color=red]{TODO: #1}}
+
+\newcommand{\question}[1]{\todo[color=orange]{Otázka: #1}}
+
+\newcommand{\note}[1]{\todo[color=green]{Pozn.: #1}}
+
+\newcommand{\inlinecode}[1]{\texttt{#1}}
+
+\newcommand{\source}[1]{\caption*{Zdroj: {#1}} }
+
+\newcommand{\highlight}[1]{\textcolor{orange}{#1}}
+
+\newcommand{\cpp}{C\nolinebreak[4]\hspace{-.05em}\raisebox{.4ex}{\tiny{\textbf{++}}}}
+
+\newcommand{\csharp}{C\nolinebreak\hspace{-.05em}\raisebox{.45ex}{\tiny{\textbf{\#}}}}
+
+
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+% \newcommand{\koruna}[1]{\num[group-minimum-digits=4]{#1}\,{}Kč}
+\newcommand{\koruna}[1]{#1\,{}Kč}
+
+\newcolumntype{?}[1]{!{\vrule width #1}}

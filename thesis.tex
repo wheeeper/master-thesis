@@ -1,0 +1,89 @@
+% arara: xelatex: { shell : yes }
+% arara: biber
+% arara: xelatex: { shell : yes }
+% arara: xelatex: { shell : yes }
+
+% options:
+% thesis=B bachelor's thesis
+% thesis=M master's thesis
+% Czech thesis in Czech language
+% Slovak thesis in Slovak language
+% English thesis in English language
+% hide links remove color boxes around hyperlinks
+
+\documentclass[thesis=M,czech,hidelinks]{template/FITthesis}[2019/12/23]
+
+\usepackage[utf8]{inputenc} % LaTeX source encoded as UTF-8
+\usepackage{dirtree} %directory tree visualization
+
+\usepackage{lipsum}
+\usepackage{xevlna}
+\usepackage{pdfpages}
+\usepackage{minted}
+\usemintedstyle{friendly}
+
+
+\usepackage{chngcntr}
+\counterwithin{listing}{chapter}
+
+\usepackage[htt]{hyphenat}
+\usepackage{caption}
+
+\usepackage[style=iso-numeric]{biblatex}
+\addbibresource{ref.bib}
+
+\usepackage{float}
+\usepackage{todonotes}
+
+% \usepackage{siunitx}
+% \sisetup{
+%     output-decimal-marker={,}% just uncomment if you want to use comma as the decimal marker!
+% }
+
+
+\usepackage{xpatch,letltxmacro}
+\LetLtxMacro{\cminted}{\minted}
+\let\endcminted\endminted
+\xpretocmd{\cminted}{\RecustomVerbatimEnvironment{Verbatim}{BVerbatim}{}}{}{}
+
+\input{macros/custom_macros.tex}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+% ODTUD DAL VSE ZMENTE
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\department{Katedra softwarového inženýrství}
+\title{Automatizace testů průmyslové komunikace ve virtualizovaném prostředí}
+\authorGN{Martin} %(křestní) jméno (jména) autora
+\authorFN{Štěpánek} %příjmení autora
+\authorWithDegrees{Bc.\,{}Martin Štěpánek} %jméno autora včetně současných akademických titulů
+\author{Martin Štěpánek} %jméno autora bez akademických titulů
+\supervisor{Ing.\,{}Daniel Kubeš}
+\acknowledgements{\todo{Doplnit}}
+
+\abstractCS{\todo{Doplnit}} 
+
+\abstractEN{\todo{Doplnit}}
+
+\keywordsCS{\todo{Doplnit}}
+\keywordsEN{\todo{Doplnit}}
+
+\placeForDeclarationOfAuthenticity{V~Praze}
+\declarationOfAuthenticityOption{1} %volba Prohlášení (číslo 1-6)
+% \website{http://site.example/thesis} %volitelná URL práce, objeví se v tiráži - úplně odstraňte, nemáte-li URL práce
+
+\begin{document}
+
+\input{text.tex}
+
+{
+    \setlength{\emergencystretch}{3em} 
+    \def\UrlBreaks{\do\/\do\-\do\_}
+    \printbibliography
+}
+
+\appendix
+
+\input{assets/appendix/appendix.tex}
+
+\end{document}
