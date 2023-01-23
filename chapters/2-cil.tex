@@ -1,1 +1,17 @@
 \chapter{Cíl práce}\label{chap:cil}
+
+Cílem této práce je úprava a rozšíření stávající testovací knihovny, která automatizuje testy verifikace průmyslové komunikace, o virtualizační prvky, díky kterým bude možné za využití knihovny testovat zařízení ve virtualizovaném prostředí. Součástí by měla být i analýza, dle které bude zvolena nejvhodnější možnost implementace testovací knihovny.
+
+Výhodou nově implementovaného rozšíření by měla být nezávislost na externích zařízeních/hardwaru a možnost simulace různých síťových topologií bez nutnosti fyzického zásahu do reálné sítě.
+
+Jednotlivé úkoly tedy jsou:
+\begin{enumerate}
+    \item Analyzovat způsoby, kterými lze knihovnu rozšířit o virtualizační prvky a zhodnotit je. Knihovna by měla být schopna simulovat různé síťové uspořádání a také by měla být schopna ovládat/vytvářet virtuální testovací partnery. Součástí by měla být také analýza možnosti propojení virtuálních testovacích partnerů se skutečnou sítí.
+    \item Dle výstupu z analýzy navrhnout a implementovat řešení, díky čemuž bude testovací služba schopna
+          \begin{enumerate}
+              \item samostatně spouštět všechny virtualizované účastníky testu,
+              \item vytvářet a nastavovat virtuální síť dle zvolené topologie. Testovací služba by měla podporovat sériovou topologii, topologii hvězdy a topologii kruhu.
+          \end{enumerate}
+    \item Navrhnout a implementovat způsob, kterým bude možné zaznamenávat komunikaci mezi vybranými zařízeními.
+    \item Demonstrovat funkcionalitu řešení a zhodnotit vlastnosti implementovaného řešení. Součástí by měla být i diskuze nad reálným využitím daného řešení.
+\end{enumerate}
