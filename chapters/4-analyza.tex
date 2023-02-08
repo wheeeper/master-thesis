@@ -29,3 +29,41 @@ Ukázka možného propojení všech účastníků testování můžeme vidět na
     \label{fig:bp_devicemodel}
 \end{figure}
 
+
+\subsection{Integrace do testovaného zařízení}
+
+K tomu aby mohla být knihovna použita na zařízení, které je testováno, tak je zapotřebí nejdříve implementovat rozhraní pro testované zařízení. Implementací rozhraní definujeme primárně všechny potřebné funkce pro vytvoření spojení mezi testovaným zařízením a testovací službou. Zároveň definujeme funkci pro získávání jednotlivých testů. 
+
+Tyto testy rovněž dodržují jednotnou podobu pomocí rozhraní testu. Toto rozhraní definuje tři fáze testu:
+
+\begin{enumerate}
+    \item Příprava na testování -- definování potřebných struktur, inicializace.
+    \item Testování -- provedení samotného testu.
+    \item Úklid po testu -- uvolnění využitých zdrojů a uvedení zařízení do původního stavu.
+\end{enumerate}
+
+Všechna zařízení musí mít pro provedení daného testu implementované rozhraní pro daný test. Testovací služba následně synchronizuje všechna zařízení, tak aby před započetím další testovací fáze všechna zařízení dokončila fázi předchozí. 
+
+\subsection{Možnosti virtualizace v knihovně}
+
+Původní testovací knihovna definuje již předem zmíněné testovací partnery, kteří jsou virtualizovaní participanti testů, sloužící k simulaci protistrany při testování průmyslové komunikace s testovaným zařízením. Jejich implementace kopíruje implementaci pro testované zařízení. Výhodou je, že k jejich využití je potřeba implementovat pouze samotné rozhraní pro test.
+
+Každý testovací partner má životnost pouze v průběhu testu. To znamená, že před započetím testu je každý testovací partner vytvořen a připojen k testovací službě a následně po dokončení testu ukončen. Toto umožňuju variabilní počet testovacích partnerů pro každý testů.
+
+Knihovna nijak neřeší topologii zapojení jednotlivých zařízení, podstatné pouze je, aby všechna zařízení zúčastněná v testu se byla schopna připojit k testovací službě. 
+
+
+\section{Možnosti rozšíření virtualizačních prvků}
+
+Po shlédnutí možností virtualizace ve stávající knihovně je vidět, že jsou limitované. Knihovna nepodporuje možnost simulovat jakékoliv zařízení a vůbec neřeší topologii zapojení daných zařízení. Zároveň pro každý test je potřeba implementovat rozhraní testu, tedy na všech zařízeních musí být daný test definován. 
+
+Rozšířením knihovny chceme docílit větší možnosti virtualizace a simulace reálného prostředí. Nová knihovna by tedy měla cílit na
+
+\begin{itemize}
+    \item možnost spustit jakékoliv zařízení jako virtualizované,
+    \item zapojit tato zařízení dle definované topologie (sériové linky, kruhu, hvězdy).
+\end{itemize}
+
+
+\subsection{Virtualizace zařízení}
+
