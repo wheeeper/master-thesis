@@ -55,9 +55,9 @@ Knihovna nijak neřeší topologii zapojení jednotlivých zařízení, podstatn
 
 \section{Možnosti rozšíření virtualizačních prvků}
 
-Po shlédnutí možností virtualizace ve stávající knihovně je vidět, že jsou limitované. Knihovna nepodporuje možnost simulovat jakékoliv zařízení a vůbec neřeší topologii zapojení daných zařízení. Zároveň pro každý test je potřeba implementovat rozhraní testu, tedy na všech zařízeních musí být daný test definován. 
+Z analýzy stávajícího stavu knihovny je vidět, že možnost virtualizace prostřednictvím knihovny jsou limitované. Knihovna nepodporuje možnost simulovat jakékoliv zařízení a vůbec neřeší topologii zapojení daných zařízení. Zároveň pro každý test je potřeba implementovat rozhraní testu, tedy na všech zařízeních musí být daný test definován. 
 
-Rozšířením knihovny chceme docílit větší možnosti virtualizace a simulace reálného prostředí. Nová knihovna by tedy měla cílit na
+Rozšířením knihovny tedy chceme docílit lepší možnosti virtualizace a simulace reálného prostředí. Nová knihovna by tedy měla cílit na
 
 \begin{itemize}
     \item možnost spustit jakékoliv zařízení jako virtualizované,
@@ -66,4 +66,16 @@ Rozšířením knihovny chceme docílit větší možnosti virtualizace a simula
 
 
 \subsection{Virtualizace zařízení}
+
+Při virtualizaci zařízení máme na výběr více možností jak virtualizovat. První možnost je vytvoření virtuální mašiny pro každé zařízení prostřednictvím hypervizoru. Tato možnost sice splňuje podmínku na to spustit každé zařízení jako virtualizované, ale pro toto použití je nevhodné. 
+
+Logickou možností je použití virtualizace skrz kontejnerizaci. Díky kontejnerizaci můžeme jednoduše spustit $n$ zařízení na jednom hardwaru. Pokud by jsme měli virtuální mašiny pro $n$ zařízení, tak by zároveň muselo běžet $n$ operačních systémů, což snižuje efektivnost využití výpočetních zdrojů.
+
+Toto potvrzují studie, které zkoumali rozdíl ve výkonu a efektivnosti využití výpočetních zdrojů mezi kontejnerizací prostřednictvím softwaru Docker a virtualizačního řešení KVM, který umožnuje jádru fungovat jako hypervizor. Při jejich porovnání bylo zjištěno, že díky Dockeru virtuální zařízení jsou schopna být spuštěna rychleji a využívají méně výpočetních zdrojů. V porovnání při počítání HPC(High performance counting) úkolů, bylo dosaženo díky Dockeru lepšího výkonu o 42\,\% při úkolech náročných na procesor a o 14,98\,\% lepšího výkonu při úkolech náročných na interní paměť.\cite{kvmdockercomp}\cite{2021virt}
+
+
+\subsection{Porovnání kontejnerizačních řešení}
+
+
+
 
