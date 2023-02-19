@@ -15,11 +15,11 @@ Knihovna rozlišuje tři druhy účastníků testování:
     \item[Testovací partner] Zařízení, které simuluje nějaké testované zařízení. Toto zařízení běží na stejném zařízení, jako testovací služba. 
 \end{description}
 
-Ideou knihovny je, že testovací služba, která řídí a synchronizuje běh na všech zúčastněných zařízení, je spouštěna automatizovaně za pomoci Azure DevOps serveru v Azure Pipelines. Společně s ním je spuštěn i vyvíjený produkt, který chceme otestovat, v tomto kontextu nazýván jako testované zařízení. Testované zařízení se následně připojí k testovací službě a po úspěchu této fáze započne samotné testování. 
+Ideou knihovny je, že testovací služba, která řídí a synchronizuje běh na všech zúčastněných zařízení, je spouštěna automatizovaně za pomoci Azure DevOps serveru v Azure Pipelines. Společně s ním je spuštěn i vyvíjený produkt, který je hlavním cílem testování, v tomto kontextu nazýván jako testované zařízení. Testované zařízení se následně připojí k testovací službě a po úspěchu této fáze započne samotné testování. Implicitně knihovna tedy vyžaduje alespoň jedno nevirtualizované testované zařízení (v tomto smyslu zařízení nesmí být virtualizované testovací knihovnou). 
 
 Pro každý test lze definovat další účastníky testování - testovací partnery. Tito testovací partneři běží pouze po dobu daného testu a po dokončení testu zaniknou. Hlavní úlohou těchto zařízení je simulace protistrany při komunikaci. 
 
-Ukázka možného propojení všech účastníků testování můžeme vidět na obrázku \ref{fig:bp_devicemodel}. Jak zde je vidět, testovací partneři a testovací služba běží na jednom zařízení, takzvaném agentovi, na kterém je primárně spouštěno celé testování. Vlevo dole je vidět testované zařízení SIMATIC ET 200SP, které je propojeno s agentem. Vpravo dole můžeme vidět PLC, které pouze znázorňuje možnost propojení s dalšími externími zařízeními.
+Ukázka možného propojení všech účastníků testování je vidět na obrázku \ref{fig:bp_devicemodel}. Jak je vidět, testovací partneři a testovací služba běží na jednom zařízení, takzvaném agentovi, na kterém je primárně spouštěno celé testování. Vlevo dole je vidět testované zařízení, v tomto případě SIMATIC ET 200SP, které je propojeno s agentem. Vpravo dole můžeme vidět PLC, které pouze znázorňuje možnost propojení s dalšími externími zařízeními.
 
 \begin{figure}[htbp]
     \centering 
@@ -32,7 +32,7 @@ Ukázka možného propojení všech účastníků testování můžeme vidět na
 
 \subsection{Integrace do testovaného zařízení}
 
-K tomu aby mohla být knihovna použita na zařízení, které je testováno, tak je zapotřebí nejdříve implementovat rozhraní pro testované zařízení. Implementací rozhraní definujeme primárně všechny potřebné funkce pro vytvoření spojení mezi testovaným zařízením a testovací službou. Zároveň definujeme funkci pro získávání jednotlivých testů. 
+K tomu aby mohla být knihovna použita na zařízení, které je testováno, tak je zapotřebí nejdříve implementovat rozhraní pro testované zařízení. Implementací rozhraní jsou definovány primárně všechny potřebné funkce pro vytvoření spojení mezi testovaným zařízením a testovací službou. Zároveň definujeme funkci pro získávání instancí jednotlivých testů. 
 
 Tyto testy rovněž dodržují jednotnou podobu pomocí rozhraní testu. Toto rozhraní definuje tři fáze testu:
 
@@ -42,7 +42,9 @@ Tyto testy rovněž dodržují jednotnou podobu pomocí rozhraní testu. Toto ro
     \item Úklid po testu -- uvolnění využitých zdrojů a uvedení zařízení do původního stavu.
 \end{enumerate}
 
-Všechna zařízení musí mít pro provedení daného testu implementované rozhraní pro daný test. Testovací služba následně synchronizuje všechna zařízení, tak aby před započetím další testovací fáze všechna zařízení dokončila fázi předchozí. 
+Všichni účastníci testu musí mít pro provedení daného testu obsahovat implementaci daného testu, definovanou rozhraním pro test, a musí být na základě obdržení identifikátoru testu schopni test instanciovat. To se provede registrací testu ve funkci \inlinecode{getTest}, která je definována rozhraním pro zařízení.
+
+Testovací služba následně synchronizuje všechny účastníky, tak aby před započetím další testovací fáze všechna zařízení dokončila fázi předchozí. 
 
 \subsection{Možnosti virtualizace v knihovně}
 
@@ -50,14 +52,23 @@ Původní testovací knihovna definuje již předem zmíněné testovací partne
 
 Každý testovací partner má životnost pouze v průběhu testu. To znamená, že před započetím testu je každý testovací partner vytvořen a připojen k testovací službě a následně po dokončení testu ukončen. Toto umožňuju variabilní počet testovacích partnerů pro každý testů.
 
-Knihovna nijak neřeší topologii zapojení jednotlivých zařízení, podstatné pouze je, aby všechna zařízení zúčastněná v testu se byla schopna připojit k testovací službě. 
+\subsection{Topologie zapojení účastníků testu}
 
+V případě verifikace průmyslové komunikace je samozřejmě podstatné, aby všichni účastníci testu byly schopni komunikovat mezi sebou dle potřeb daných testů. Aktuální knihovna ale toto nijak nekontroluje. 
+
+Jediný požadavek knihovny je, aby každý účastník testu byl připojen k testovací službě a odpovídal na její požadavky. Samotné testované zařízení se připojuje před započetím testování a do konce všech testů připojeno. Testovací partneři, jak už jsem zmínil, se připojují dle potřeby před započetím jednotlivých testů.
+
+Knihovna tedy nijak neřeší topologii zapojení jednotlivých zařízení. Je zde tedy předpoklad, že testovací partneři budou schopni komunikovat s ostatními účastníky testu díky tomu, že samotná testovací služba je schopna s nimi komunikovat. Zároveň, pokud by z nějakého důvodu komunikace nebyla možná, tak musí selhat samotné testy.
+
+\subsection{Souhrn}
+
+I když testovací knihovna přináší zjednodušení a automatizovaní testování průmyslové komunikace, tak stále je zde prostor pro zlepšení. Knihovna v aktuální podobě podporuje pouze limitovanou virtualizaci. Za pomoci knihovny jsme sice schopni simulovat protistranu, ale již ne samotné zařízení a to vždy musí běžet nezávisle na knihovně. 
+
+Aktuální nový požadavek na řešení topologie zapojení zařízení nesplňuje vůbec. Zároveň je limitující požadavek, že pro každý test musí každý účastník testu obsahovat implementaci testu. Toto nemusí být vždy potřeba, například při testování veřejného rozhraní.
 
 \section{Možnosti rozšíření virtualizačních prvků}
 
-Z analýzy stávajícího stavu knihovny je vidět, že možnost virtualizace prostřednictvím knihovny jsou limitované. Knihovna nepodporuje možnost simulovat jakékoliv zařízení a vůbec neřeší topologii zapojení daných zařízení. Zároveň pro každý test je potřeba implementovat rozhraní testu, tedy na všech zařízeních musí být daný test definován. 
-
-Rozšířením knihovny tedy chceme docílit lepší možnosti virtualizace a simulace reálného prostředí. Nová knihovna by tedy měla cílit na
+Z analýzy stávajícího stavu knihovny je vidět, že možnost virtualizace prostřednictvím knihovny jsou limitované. Knihovna nepodporuje možnost simulovat jakékoliv zařízení a vůbec neřeší topologii zapojení daných zařízení. Rozšířením knihovny tedy chceme docílit lepší možnosti virtualizace a simulace reálného prostředí. Nová knihovna by tedy měla cílit na
 
 \begin{itemize}
     \item možnost spustit jakékoliv zařízení jako virtualizované,
@@ -76,6 +87,12 @@ Toto potvrzují studie, které zkoumali rozdíl ve výkonu a efektivnosti využi
 
 \subsection{Porovnání kontejnerizačních řešení}
 
+V dnešní době existuje mnoho řešení, který využívají kontejnerizaci. V následující sekci porovnám vybraná řešení a zhodnotím jejich vhodnost použití v testovací knihovně. Hlavním požadavkem na dané řešení je, aby podporovalo operační systém Windows. Vybraná řešení tedy jsou: \customtodo{Dopsat levely kontejnerizačních řešení}
 
+\begin{itemize}
+    \item Docker
+    \item Podman
+    \item Vagrant 
+\end{itemize}
 
 
