@@ -82,17 +82,60 @@ Při virtualizaci zařízení máme na výběr více možností jak virtualizova
 
 Logickou možností je použití virtualizace skrz kontejnerizaci. Díky kontejnerizaci můžeme jednoduše spustit $n$ zařízení na jednom hardwaru. Pokud by jsme měli virtuální mašiny pro $n$ zařízení, tak by zároveň muselo běžet $n$ operačních systémů, což snižuje efektivnost využití výpočetních zdrojů.
 
-Toto potvrzují studie, které zkoumali rozdíl ve výkonu a efektivnosti využití výpočetních zdrojů mezi kontejnerizací prostřednictvím softwaru Docker a virtualizačního řešení KVM, který umožnuje jádru fungovat jako hypervizor. Při jejich porovnání bylo zjištěno, že díky Dockeru virtuální zařízení jsou schopna být spuštěna rychleji a využívají méně výpočetních zdrojů. V porovnání při počítání HPC(High performance counting) úkolů, bylo dosaženo díky Dockeru lepšího výkonu o 42\,\% při úkolech náročných na procesor a o 14,98\,\% lepšího výkonu při úkolech náročných na interní paměť.\cite{kvmdockercomp}\cite{2021virt}
+Toto potvrzují studie, které zkoumali rozdíl ve výkonu a efektivnosti využití výpočetních zdrojů mezi kontejnerizací prostřednictvím softwaru Docker a virtualizačního řešení KVM, který umožnuje jádru fungovat jako hypervizor. Při jejich porovnání bylo zjištěno, že díky Dockeru virtuální zařízení jsou schopna být spuštěna rychleji a využívají méně výpočetních zdrojů. V porovnání při počítání HPC(High performance counting) úkolů, bylo dosaženo díky Dockeru lepšího výkonu o 42\,\% při úkolech náročných na procesor a o 14,98\,\% lepšího výkonu při úkolech náročných na interní paměť.\cite{kvmdockercomp}\cite{2021virt} \note{Asi bude potřebovat ještě uhladit}
 
 
 \subsection{Porovnání kontejnerizačních řešení}
 
-V dnešní době existuje mnoho řešení, který využívají kontejnerizaci. V následující sekci porovnám vybraná řešení a zhodnotím jejich vhodnost použití v testovací knihovně. Hlavním požadavkem na dané řešení je, aby podporovalo operační systém Windows. Vybraná řešení tedy jsou: \customtodo{Dopsat levely kontejnerizačních řešení}
+V dnešní době existuje mnoho řešení, který využívají kontejnerizaci. V následující sekci porovnám vybraná řešení a zhodnotím jejich vhodnost použití v testovací knihovně. 
+
+K výběru je ale nejdříve potřeba nadefinovat úrovně správy, tedy oblasti, které můžou jednotlivé nástroje spravovat. Ty můžeme dle Aleksic\cite{docker_alt_23} rozdělit do čtyř kategorií:
+
+\begin{description}
+    \item[Image builders] Nástroje, které umožňují vytvářet kontejnery v souladu s pravidly dle OCI.
+    \item[Container managers] V širším smyslu tak můžeme nazvat všechny nástroje, které pomáhají se sestavováním a během kontejnerů. Specificky ale tak můžeme nazvat ty nástroje, které pomáhají spravovat jednotlivé instance kontejnerů.
+    \item[Container runtimes] Nástroje, které se starají o běh kontejnerů.
+    \item[Container engines] Nástroje, které se starají o všechny procesy spojené s  kontejnerizací.
+\end{description}
+
+K úspěšnému využití kontejnerizace je samozřejmě potřeba spravovat všechny procesy spojené s kontejnerizací. Mým cílem je tedy primárně použít k řešení kontejnerizace tzv. \textit{container engines}. Jejich přímým využitím, oproti využití několika nástrojů, které by dohromady tvořili container engine, doufám předejití problémům s kompatibilitou a integrací těchto nástrojů dohromady.
+
+Hlavním požadavkem na dané řešení je, aby podporovalo operační systém Windows. Tento požadavek primárně vyvstává z infrastruktury firmy Siemens. Vybranými řešeními tedy jsou
 
 \begin{itemize}
-    \item Docker
-    \item Podman
-    \item Vagrant 
+    \item Docker,
+    \item Podman,
+    \item Vagrant. 
 \end{itemize}
 
+\subsubsection{Docker}
+Docker je dle mě neznámějším nástrojem, který zprostředkovává kontejnerizaci. Proto také ve většině případech je většina ostatních nástrojů s Docker srovnávaná. Docker se skládá z několika hlavních komponent, které dohromady tvoří námi požadovaný container engine. Mezi tyto komponenty patří
+
+\begin{itemize}
+    \item Docker Client and Server,
+    \item Docker Containers,
+    \item Docker Images,
+    \item Docker Registries.
+\end{itemize}
+
+Docker Client and Server jak z překladu názvu vyplívá obsahuje klienta a server. Server dostává žádosti od klienta, které následně zpracovává. Architekturu nástroje Docker můžeme vidět na obrázku \ref{fig:docker_arch}. Zajímavou komponentou je Docker Daemon. Klient provádí komunikaci s Docker Daemon prostřednictvím stanového REST API a ten se následovně stará o sestavování, běh a distribuci Docker kontejnerů. Docker server a klient může běžet na jednom stroji, ale zároveň klient se může k serveru připojit i vzdáleně. 
+\cite{turnbull2014docker}\cite{docker_overview}
+
+\begin{figure}[htbp]
+    \centering 
+    \includegraphics[width=0.97\textwidth]{assets/img/docker_arch.pdf}
+    \caption{Docker architektura}
+    \source{Vytvořeno dle předlohy z \cite{turnbull2014docker}}
+    \label{fig:docker_arch}
+\end{figure}
+
+Jednotlivé Docker kontejnery jsou vytvářeny z tzv. Docker Images. Tyto images, neboli v češtině obrazy, obsahují definici všech závislostí a balíčků, potřebných k běhu kontejneru. Způsoby jak vytvářet obrazy jsou dva - buď můžeme definovat vlastní obraz a nebo použít nějakou již vytvořenou předlohu. Je podstatné zmínit, že každý existující obraz může být předlohou pro nový obraz. 
+
+Tyto obrazy následně můžou být uloženy v Docker Registries. Ten slouží jako repositář pro obrazy, který může být buď veřejný, nebo soukromý. Veřejný repositář se nazývá Docker Hub, kde každý může získat kterýkoliv již vytvořený image, a nebo může také nahrát vlastní. \cite{turnbull2014docker} 
+
+
+
+\subsubsection{Podman}
+
+\subsubsection{Vagrant}
 
