@@ -133,7 +133,15 @@ Jednotlivé Docker kontejnery jsou vytvářeny z tzv. Docker Images. Tyto images
 
 Tyto obrazy následně můžou být uloženy v Docker Registries. Ten slouží jako repositář pro obrazy, který může být buď veřejný, nebo soukromý. Veřejný repositář se nazývá Docker Hub, kde každý může získat kterýkoliv již vytvořený image, a nebo může také nahrát vlastní. \cite{turnbull2014docker} 
 
+Docker v základu nabízí několik druhů síťových ovladačů. Síťový typ \textit{host} umožňuje odstranit izolaci mezi kontejnery a plně využít síť zprostředkovanou hostem, tedy Docker serverem. Oproti tomu síťový typ \textit{overlay} slouží k propojení různých Docker daemonů a umožňuje komunikace mezi nimi. 
 
+Pro naše použití ale začínají být zajímavé až síťové typy \textit{bridge}, \textit{ipvlan} a \textit{macvlan}. \textit{Bridge} je výchozím síťovým typem, který Docker používá v momentě kdy dva kontejnery potřebují mezi sebou komunikovat na stejném zařízení. 
+
+\customtodo{Dopsat macvlan a ipvlan}
+
+Docker také podporuje vlastní implementace síťových ovladačů. Ty následně mohou být nahrány do stejného repositáře jako Docker obrazy. Bohužel jelikož tyto síťové ovladače jsou zahrnuty do širší kategorie \uv{rozšíření}, tak jejich vyhledávání je náročné a často neobsahují skoro žádný popis. 
+
+\cite{docker_networking_overview} \cite{docker_brige_overview}
 
 \subsubsection{Podman}
 
