@@ -68,7 +68,7 @@ Aktuální nový požadavek na řešení topologie zapojení zařízení nesplň
 
 \section{Možnosti rozšíření virtualizačních prvků}
 
-Z analýzy stávajícího stavu knihovny je vidět, že možnost virtualizace prostřednictvím knihovny jsou limitované. Knihovna nepodporuje možnost simulovat jakékoliv zařízení a vůbec neřeší topologii zapojení daných zařízení. Rozšířením knihovny tedy chceme docílit lepší možnosti virtualizace a simulace reálného prostředí. Nová knihovna by tedy měla cílit na
+Z analýzy stávajícího stavu knihovny je vidět, že možnost virtualizace prostřednictvím knihovny jsou limitované. Knihovna nepodporuje možnost simulovat jakékoliv zařízení a vůbec neřeší topologii zapojení daných zařízení. Rozšířením knihovny tedy chceme docílit větší možnosti virtualizace a simulace reálného prostředí. Nová knihovna by tedy měla cílit na
 
 \begin{itemize}
     \item možnost spustit jakékoliv zařízení jako virtualizované,
@@ -80,9 +80,9 @@ Z analýzy stávajícího stavu knihovny je vidět, že možnost virtualizace pr
 
 Při virtualizaci zařízení máme na výběr více možností jak virtualizovat. První možnost je vytvoření virtuální mašiny pro každé zařízení prostřednictvím hypervizoru. Tato možnost sice splňuje podmínku na to spustit každé zařízení jako virtualizované, ale pro toto použití je nevhodné. 
 
-Logickou možností je použití virtualizace skrz kontejnerizaci. Díky kontejnerizaci můžeme jednoduše spustit $n$ zařízení na jednom hardwaru. Pokud by jsme měli virtuální mašiny pro $n$ zařízení, tak by zároveň muselo běžet $n$ operačních systémů, což snižuje efektivnost využití výpočetních zdrojů.
+Logickou možností je použití virtualizace skrz kontejnerizaci. Díky kontejnerizaci můžeme jednoduše spustit $n$ zařízení na jednom hardwaru. Pokud by jsme měli virtuální mašiny pro $n$ zařízení, tak by zároveň muselo běžet $n$ operačních systémů, což snižuje efektivnost využití výpočetních zdrojů. Zároveň můžeme jednoduše a dynamicky vytvářet virtuální sítě, které budou splňovat požadovanou topologii. 
 
-Toto potvrzují studie, které zkoumali rozdíl ve výkonu a efektivnosti využití výpočetních zdrojů mezi kontejnerizací prostřednictvím softwaru Docker a virtualizačního řešení KVM, který umožnuje jádru fungovat jako hypervizor. Při jejich porovnání bylo zjištěno, že díky Dockeru virtuální zařízení jsou schopna být spuštěna rychleji a využívají méně výpočetních zdrojů. V porovnání při počítání HPC(High performance counting) úkolů, bylo dosaženo díky Dockeru lepšího výkonu o 42\,\% při úkolech náročných na procesor a o 14,98\,\% lepšího výkonu při úkolech náročných na interní paměť.\cite{kvmdockercomp}\cite{2021virt} \note{Asi bude potřebovat ještě uhladit}
+Toto potvrzují studie, které zkoumali rozdíl ve výkonu a efektivnosti využití výpočetních zdrojů mezi kontejnerizací prostřednictvím softwaru Docker a virtualizačního řešení KVM, který umožnuje jádru fungovat jako hypervizor. Při jejich porovnání bylo zjištěno, že díky nástroji Docker jsou virtuální zařízení schopna být spuštěna rychleji a využívají méně výpočetních zdrojů. V porovnání při počítání HPC(High performance counting) úkolů, bylo dosaženo díky nástroji Docker lepšího výkonu o 42\,\% při úkolech náročných na procesor a o 14,98\,\% lepšího výkonu při úkolech náročných na interní paměť.\cite{kvmdockercomp}\cite{2021virt} \note{Asi bude potřebovat ještě uhladit v závuslosti na teoretické časti atd.}
 
 
 \subsection{Porovnání kontejnerizačních řešení}
@@ -109,7 +109,7 @@ Hlavním požadavkem na dané řešení je, aby podporovalo operační systém W
 \end{itemize}
 
 \subsubsection{Docker}
-Docker je dle mě neznámějším nástrojem, který zprostředkovává kontejnerizaci. Proto také ve většině případech je většina ostatních nástrojů s Docker srovnávaná. Docker se skládá z několika hlavních komponent, které dohromady tvoří námi požadovaný container engine. Mezi tyto komponenty patří
+Docker je dle mě neznámějším a nejrozšířenějším nástrojem, který zprostředkovává kontejnerizaci. Proto také ve většině případech je většina ostatních nástrojů s Docker srovnávaná. Docker se skládá z několika hlavních komponent, které dohromady tvoří námi požadovaný container engine. Mezi tyto komponenty patří
 
 \begin{itemize}
     \item Docker Client and Server,
@@ -118,7 +118,7 @@ Docker je dle mě neznámějším nástrojem, který zprostředkovává kontejne
     \item Docker Registries.
 \end{itemize}
 
-Docker Client and Server jak z překladu názvu vyplývá obsahuje klienta a server. Server dostává žádosti od klienta, které následně zpracovává. Architekturu nástroje Docker můžeme vidět na obrázku \ref{fig:docker_arch}. Zajímavou komponentou je Docker Daemon. Klient provádí komunikaci s Docker Daemon prostřednictvím stanového REST API a ten se následovně stará o sestavování, běh a distribuci Docker kontejnerů. Docker server a klient může běžet na jednom stroji, ale zároveň klient se může k serveru připojit i vzdáleně. 
+Docker Client and Server jak z překladu názvu vyplývá obsahuje klienta a server. Server dostává žádosti od klienta, které následně zpracovává. Architekturu nástroje Docker můžeme vidět na obrázku \ref{fig:docker_arch}. Zajímavou komponentou je Docker Daemon, což je persistentní proces, který neustále běží na pozadí. Klient provádí komunikaci s Docker Daemon prostřednictvím stanového REST API a ten se následovně stará o sestavování, běh a distribuci Docker kontejnerů. Docker server a klient může běžet na jednom stroji, ale zároveň klient se může k serveru připojit i vzdáleně. 
 \cite{turnbull2014docker}\cite{docker_overview}
 
 \begin{figure}[htbp]
@@ -135,22 +135,22 @@ Tyto obrazy následně můžou být uloženy v Docker Registries. Ten slouží j
 
 Docker v základu nabízí několik druhů síťových ovladačů. Síťový typ \textit{host} umožňuje odstranit izolaci mezi kontejnery a plně využít síť zprostředkovanou hostem, tedy Docker serverem. Oproti tomu síťový typ \textit{overlay} slouží k propojení různých Docker daemonů a umožňuje komunikace mezi nimi. 
 
-Pro naše použití ale začínají být zajímavé až síťové typy \textit{bridge}, \textit{ipvlan} a \textit{macvlan}. \textit{Bridge} je výchozím síťovým typem, který Docker používá v momentě kdy dva kontejnery potřebují mezi sebou komunikovat na stejném zařízení. 
-
-\customtodo{Dopsat macvlan a ipvlan}
+Pro naše použití ale začínají být zajímavé až síťové typy \textit{bridge}, \textit{IPvlan} a \textit{MACvlan}. \textit{Bridge} je výchozím síťovým typem, který Docker používá v momentě kdy dva kontejnery potřebují mezi sebou komunikovat na stejném zařízení. \textit{IPvlan} oproti tomu umožňuje uživatelům plnou kontrolu nad IPv4 a IPv6 adresováním a nad druhou a třetí úrovní ISO/OSI modelu. V neposlední řadě \textit{MACvlan} umožňuje kontejnerům přiřadit různé MAC adresy, které tak mohou být odlišné od hostujícího zařízení. To umožňuje kontejnerům vypadat na síti jako fyzické zařízení.
 
 Docker také podporuje vlastní implementace síťových ovladačů. Ty následně mohou být nahrány do stejného repositáře jako Docker obrazy. Bohužel jelikož tyto síťové ovladače jsou zahrnuty do širší kategorie \uv{rozšíření}, tak jejich vyhledávání je náročné a často neobsahují skoro žádný popis. \cite{docker_networking_overview}\cite{docker_brige_overview}
 
 Díky tak širokému využití Docker je jeho podpora rozšířena i pro jazyk \csharp~díky knihovnám, které byly vytvořeny komunitou. Ty umožňují přímo sestavovat a nasazovat kontejnery a spravovat virtuální síť. To velice ulehčuje jeho možné použití v testovací knihovně. 
 
 \subsubsection{Podman}
-Podman je velice podobný Dockeru. Podman je primárně nástroj zaměřený na operační systém Linux, který pomáhá najít, spustit a nasadit kontejnery dle pravidel OCI. V použití je dokonce až tak podobný, že většina uživatelů může změnit příkaz \inlinecode{docker} na \inlinecode{podman} bez problémů. Rozdíly tam ale přeci jen jsou. 
+Podman je velice podobný Dockeru. Tento nástroj je primárně zaměřený na operační systém Linux, kde pomáhá najít, spustit a nasadit kontejnery dle pravidel OCI. V použití je dokonce až tak podobný, že většina uživatelů může změnit příkaz \inlinecode{docker} na \inlinecode{podman} bez problémů. Rozdíly tam ale přeci jen jsou. 
 
 Podman oproti Docker používá takzvanou \textit{daemon-less} architekturu. Jak už bylo zmíněno, Docker obsahuje neustále běžící proces který se nazývá \textit{daemon}, který poslouchá příkazy od klienta a spravuje všechny procesy spojené s kontejnerizací. Tento přístup vytváří problémy hlavně z bezpečnostního hlediska, jelikož daemon musí být spuštěn s právy správce počítače. Docker sice podporuje od verze v19.03 tzv. \textit{rootless execution}, tedy mód kdy nepotřebuje práva správce, ale při chodu v tomto módu mohou uživatelé narazit na různé limitace.
 
-A na toto se přesně zaměřil Podman. Podman používá pro správu kontejnerů nástroj \textit{systemd}, který ke spuštění využívá práva uživatele, který provádí příkazy. Podman také využívá jiný nástroj \textit{Buildah}, za pomocí něhož je schopen sestavovat kontejnery bez daemona. \customtodo{Doplnit networking}
+A na toto se přesně zaměřil Podman. Podman používá pro správu kontejnerů nástroj \textit{systemd}, který ke spuštění využívá práva uživatele, který provádí příkazy. Podman také využívá jiný nástroj \textit{Buildah}, za pomocí něhož je schopen sestavovat kontejnery bez daemona. \cite{podman}\cite{podman_vs_docker}
 
-Jak jsem řekl na začátku, Podman je nástroj primárně zaměřený na operační systém Linux, ovšem má i svou distribuci pro Windows. Ovšem k tomu aby mohl na Windows fungovat, tak každý kontejner obsahuje hostující systém Linux, na kterém kontejnery běží. \cite{podman}\cite{podman_vs_docker}
+Podman stejně jako Docker podporuje síťové typy \textit{bridge} a \textit{MACvlan}. Ovšem k jejich použití již potřebuje práva správce počítače. K vyřešení tohoto problému Podman používá síťový typ \textit{slirp4netns}. Ta vytvoří speciální TAP zařízení, fungující na linkové vrstvě ISO/OSI modelu a umožňuje komunikaci mezi kontejnery, které jsou ovšem takto fungují izolovaně od sebe. \cite{podman_network}
+
+Jak jsem řekl na začátku, Podman je nástroj primárně zaměřený na operační systém Linux, ovšem má i svou distribuci pro Windows. Ovšem k tomu aby mohl na Windows fungovat, tak každý kontejner musí obsahovat hostující systém Linux, na kterém jsou následně kontejnery spuštěny. \cite{podman_vs_docker}
 
 \subsubsection{Vagrant}
 
@@ -160,6 +160,7 @@ Stejně jako Docker, i Vagrant má širokou podporu komunitních obrazů, ze kte
 \customtodo{Rozšířit}
 
 V některých aspektech jsou ovšem ostatní možnosti lepší volbou. Jednou z nich je využití výpočetních zdrojů. Oproti Docker, který používá přímo zdroje hostujícího stroje, tak každá virtuální mašina vytvořená ve Vagrant spotřebuje specifický počet jáder, paměti RAM a paměti na disku. Zároveň čas změny konfigurace a sestavení virtuální mašiny je mnohem rychlejší na Docker, než ve Vagrant.\cite{madapparambath_2022}
+\question{Nechat Vagrant nebo ne, jelikož co koukám tak to kontejnerizaci nedělá? Hledat náhradu?}
 
 \subsection{Shrnutí}
 
