@@ -32,7 +32,7 @@ Ukázka možného propojení všech účastníků testování je vidět na obrá
 
 \subsection{Integrace do testovaného zařízení}
 
-K tomu aby mohla být knihovna použita na zařízení, které je testováno, tak je zapotřebí nejdříve implementovat rozhraní pro testované zařízení. Implementací rozhraní jsou definovány primárně všechny potřebné funkce pro vytvoření spojení mezi testovaným zařízením a testovací službou. Zároveň definujeme funkci pro získávání instancí jednotlivých testů. 
+K tomu aby mohla být knihovna použita na zařízení, které je testováno, je zapotřebí nejdříve implementovat rozhraní pro testované zařízení. Implementací rozhraní jsou definovány primárně všechny potřebné funkce pro vytvoření spojení mezi testovaným zařízením a testovací službou. Zároveň definujeme funkci pro získávání instancí jednotlivých testů. 
 
 Tyto testy rovněž dodržují jednotnou podobu pomocí rozhraní testu. Toto rozhraní definuje tři fáze testu:
 
@@ -54,7 +54,7 @@ Každý testovací partner má životnost pouze v průběhu testu. To znamená, 
 
 \subsection{Topologie zapojení účastníků testu}
 
-V případě verifikace průmyslové komunikace je samozřejmě podstatné, aby všichni účastníci testu byly schopni komunikovat mezi sebou dle potřeb daných testů. Aktuální knihovna ale toto nijak nekontroluje. 
+V případě verifikace průmyslové komunikace je samozřejmě podstatné, aby všichni účastníci testu byli schopni komunikovat mezi sebou dle potřeb daných testů. Aktuální knihovna ale toto nijak nekontroluje. 
 
 Jediný požadavek knihovny je, aby každý účastník testu byl připojen k testovací službě a odpovídal na její požadavky. Samotné testované zařízení se připojuje před započetím testování a do konce všech testů připojeno. Testovací partneři, jak už jsem zmínil, se připojují dle potřeby před započetím jednotlivých testů.
 
@@ -68,7 +68,7 @@ Aktuální nový požadavek na řešení topologie zapojení zařízení nesplň
 
 \section{Možnosti rozšíření virtualizačních prvků}
 
-Z analýzy stávajícího stavu knihovny je vidět, že možnost virtualizace prostřednictvím knihovny jsou limitované. Knihovna nepodporuje možnost simulovat jakékoliv zařízení a vůbec neřeší topologii zapojení daných zařízení. Rozšířením knihovny tedy chceme docílit větší možnosti virtualizace a simulace reálného prostředí. Nová knihovna by tedy měla cílit na
+Z analýzy stávajícího stavu knihovny je vidět, že možnost virtualizace prostřednictvím stávající knihovny jsou limitované. Knihovna nepodporuje možnost simulovat jakékoliv zařízení a vůbec neřeší topologii zapojení daných zařízení. Rozšířením knihovny tedy chceme docílit větší možnosti virtualizace a simulace reálného prostředí. Nová knihovna by tedy měla cílit na
 
 \begin{itemize}
     \item možnost spustit jakékoliv zařízení jako virtualizované,
@@ -80,9 +80,9 @@ Z analýzy stávajícího stavu knihovny je vidět, že možnost virtualizace pr
 
 Při virtualizaci zařízení máme na výběr více možností jak virtualizovat. První možnost je vytvoření virtuální mašiny pro každé zařízení prostřednictvím hypervizoru. Tato možnost sice splňuje podmínku na to spustit každé zařízení jako virtualizované, ale pro toto použití je nevhodné. 
 
-Logickou možností je použití virtualizace skrz kontejnerizaci. Díky kontejnerizaci můžeme jednoduše spustit $n$ zařízení na jednom hardwaru. Pokud by jsme měli virtuální mašiny pro $n$ zařízení, tak by zároveň muselo běžet $n$ operačních systémů, což snižuje efektivnost využití výpočetních zdrojů. Zároveň můžeme jednoduše a dynamicky vytvářet virtuální sítě, které budou splňovat požadovanou topologii. 
+Logickou možností je použití virtualizace skrz kontejnerizaci. Díky kontejnerizaci můžeme jednoduše spustit $n$ zařízení na jednom hardwaru. Pokud bychom měli virtuální mašiny pro $n$ zařízení, tak by zároveň muselo běžet $n$ operačních systémů, což snižuje efektivnost využití výpočetních zdrojů. Zároveň můžeme jednoduše a dynamicky vytvářet virtuální sítě, které budou splňovat požadovanou topologii. 
 
-Toto potvrzují studie, které zkoumali rozdíl ve výkonu a efektivnosti využití výpočetních zdrojů mezi kontejnerizací prostřednictvím softwaru Docker a virtualizačního řešení KVM, který umožnuje jádru fungovat jako hypervizor. Při jejich porovnání bylo zjištěno, že díky nástroji Docker jsou virtuální zařízení schopna být spuštěna rychleji a využívají méně výpočetních zdrojů. V porovnání při počítání HPC(High performance counting) úkolů, bylo dosaženo díky nástroji Docker lepšího výkonu o 42\,\% při úkolech náročných na procesor a o 14,98\,\% lepšího výkonu při úkolech náročných na interní paměť.\cite{kvmdockercomp}\cite{2021virt} \note{Asi bude potřebovat ještě uhladit v závuslosti na teoretické časti atd.}
+Toto potvrzují studie, které zkoumaly rozdíl ve výkonu a efektivnosti využití výpočetních zdrojů mezi kontejnerizací prostřednictvím softwaru Docker a virtualizačního řešení KVM, který umožnuje jádru fungovat jako hypervizor. Při jejich porovnání bylo zjištěno, že díky nástroji Docker jsou virtuální zařízení schopna být spuštěna rychleji a využívají méně výpočetních zdrojů. V porovnání při počítání HPC(High performance counting) úkolů, bylo dosaženo díky nástroji Docker lepšího výkonu o 42\,\% při úkolech náročných na procesor a o 14,98\,\% lepšího výkonu při úkolech náročných na interní paměť.\cite{kvmdockercomp}\cite{2021virt} \note{Asi bude potřebovat ještě uhladit v závuslosti na teoretické časti atd.}
 
 
 \subsection{Porovnání kontejnerizačních řešení}
