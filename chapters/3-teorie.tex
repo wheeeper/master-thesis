@@ -1,1 +1,22 @@
 \chapter{Teoretická část}\label{chap:teorie}
+
+
+\section{Virtualizace}
+
+Koncept virtualizace se poprvé objevil na konci 50.\,let minulého století, kdy skupina z University v Manchesteru vytvořila první funkční prototyp virtuální paměti. Dnes již známý termín \textit{virtual machine} (VM), neboli česky \uv{virtuální stroj}, se ovšem datuje až do 60.\, let minulého století. První takovýto stroj byl vytvořen firmou IBM a jejich cílem bylo umožnit souběžný přístup k sálovým počítačům. Každá VM byla instancí fyzického stroje a dávala iluzi toho, že uživatel přistupuje přímo k fyzickému stroji. Uživatelé mohli vyvíjet, spouštět a testovat aplikace bez obavy toho, že by mohli zhroutit celý počítač, díky tomu že každá VM byla izolovaná kopie systému. 
+
+Polovinou 70.\, let minulého století byla virtualizace dobře akceptovaným konceptem mezi uživateli. Díky ní bylo možné například virtualizovat paměť, kde tato virtualizovaná paměť dávala iluzi, že uživatelé mohou adresovat mnohem větší operační paměť, než počítač skutečně obsahoval. 
+
+Všechny tyto virtualizační techniky byly primárně cesta k vyrovnání se s vysokou pořizovací cenou hardwaru v této době. Díky ní mohli majitelé sálových počítačů využít svoji investici co nejefektivněji. Její použití se tedy se snižujícími cenami hardwaru začalo snižovat. Její použití skoro vymizelo během 80. a 90.\, let díky příchodu levnějších osobních počítačů.  
+
+Poptávka po virtualizaci začala znovu růst až v 90. letech minulého století. Se zvětšující se různorodostí hardwaru a softwaru zde vznikla poptávka na to, aby bylo možné spustit aplikace, které původně byly určeny pro jiný hardware a jiný operační systém, na jednom určitém stroji. Poptávka se ovšem zvětšila i v komerčním sektoru. Se zvyšujícími počty serverů firmy hledaly způsoby, jak využít investici do serveru naplno. Spustit pouze jednu aplikaci na serveru nebylo příliš ekonomické, jelikož tato aplikace málokdy využila všechny výpočetní zdroje, a nákup dalších serverů přinášel sebou i další náklady na údržbu. Řešení pro tento problém tedy byla opět virtualizace. Oba tyto trendy pokračují do dnes a jsou jedny z hlavních důvodů pro použití virtualizace. 
+
+Virtualita se od reality liší pouze ve formálním světě. Má ovšem podobné jádro nebo efekt. V počítačovém světě, virtuální prostředí je aplikací vnímáno stejně jako reálné prostředí, i když některé mechanismy v něm mohou fungovat jinak. Virtuální prostředí hlavně dává aplikaci zkreslený obraz reálného stroje, kde v tomto zkresleném obraze může stroj mít více, či méně určitých zdrojů. Typický moderní počítač využívá spoustu takovýchto přístupů. Jedním příkladem je již zmíněná virtuální paměť, díky čemuž může proces použít mnohem více paměti, než je fyzicky dostupné. Tato virtuální paměť taktéž umožňuje sdílení fyzické paměti mezi stovkami procesy. Podobným konceptem je i multitasking, kde jeden procesor je rozdělen a prezentován jako \uv{virtuální procesor} jednotlivým procesům. Na opačné straně, několik procesorů může být seskupeno do jednoho výkonnějšího virtuálního procesoru.
+
+Možností virtualizace je tedy spousta na mnoha úrovních. Virtualizaci tedy můžeme nadefinovat takto:
+
+\begin{displayquote}
+    Virtualizace je technologie, která kombinuje, nebo rozděluje, výpočetní zdroje k prezentaci jednoho či více prostředí za pomoci hardwarového a softwarového rozdělování, nebo agregování, parciální/kompletní simulace stroje, emulace a dalších.
+\end{displayquote}
+
+Jak je z definice vidět, virtualizace není jenom o rozdělování výpočetních zdrojů, ale o jejich sjednocování do větších celků. V rámci této práce se ale zaměřím primárně na rozdělování výpočetních zdrojů za pomoci virtualizace. \cite{campbell2006introduction}\cite{chiueh2005survey}
