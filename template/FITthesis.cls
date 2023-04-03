@@ -12,17 +12,17 @@
 
 \DeclareOption{czech}{
 	\AtBeginDocument{\selectlanguage{czech}}
-	\PassOptionsToPackage{english,main=czech}{babel}
+	\PassOptionsToPackage{english,main=czech,shorthands=off}{babel}
 	\def\@lang{1}
 }
 \DeclareOption{english}{
 	\AtBeginDocument{\selectlanguage{english}}
-	\PassOptionsToPackage{czech,main=english}{babel}
+	\PassOptionsToPackage{czech,main=english,shorthands=off}{babel}
 	\def\@lang{0}
 }
 \DeclareOption{slovak}{
 	\AtBeginDocument{\selectlanguage{slovak}}
-	\PassOptionsToPackage{english,main=slovak}{babel}
+	\PassOptionsToPackage{english,main=slovak,shorthands=off}{babel}
 	\def\@lang{2}
 }
 \DeclareOption{10pt}{\PassOptionsToClass{\CurrentOption}{memoir}}
