@@ -1,0 +1,63 @@
+\chapter{Implementace}\label{chap:implementation}
+
+V této kapitole se budu věnovat implementaci navržených úprav z kapitoly \ref{chap:design}.
+
+
+\section{Orchestrace virtualizovaného prostředí}
+Testovací knihovna k úspěšnému vytvoření potřebuje primárně umět tyto aktivity:
+
+\begin{enumerate}
+    \item Umět komunikovat se softwarem Docker.
+    \item Vytvořit kontejnery, tedy virtualizované zařízení, dle konfigurace.
+    \item Propojit všechna zařízení mezi sebou taktéž dle konfigurace.
+\end{enumerate}
+
+\subsection{Komunikace se softwarem Docker}
+Orchestrace virtualizovaného prostředí má dle návrhu probíhat s pomocí softwaru Docker. 
+Jako první tedy bylo potřebovat integrovat komunikaci se softwarem Docker do testovací knihovny. Před vytvořením vlastní integrace jsem se ovšem jako první porozhlédnul po dostupných komunitních knihovnách, které už toto připojení integrují, zda nějaká z nich není vhodná pro použití v testovací knihovně. 
+
+Testovací knihovna je sepsána v jazyce \csharp, proto jsem tedy primárně vyhledával za pomoci softwaru NuGet\cite{nuget}, který slouží jako správce balíčků, tedy externích knihoven, v jazyce \csharp\, a ekosystému .NET. Z dostupných knihoven mě primárně zaujali dvě - Docker.Dotnet\cite{dockerdotnet} a Fluent.Docker\cite{fluentdocker}. 
+
+Docker.Dotnet je open-source knihovna vytvořená a spravovaná .NET Foundation. Tato nezisková organizace, založena společností Microsoft, se stará o zlepšování open-source ekosystému okolo .NET platformy\cite{dotnetfoundation}. Lze ji tedy v podstatě nazvat označit jako \uv{oficiální} integraci softwaru Docker do .NET ekosystému, i když je fakticky komunitním dílem. 
+
+Oproti tomu knihovna Fluent.Docker je open-source knihovna původně od vývojáře Mario Toffia, ale dnes se na knihovně podílelo nějakým dílem již 30 vývojářů. Knihovna se primárně zaměřuje na integraci tzv. Fluent rozhraní, které dovoluje řetězit metody za sebou, díky tomu, že každá metoda vrací tu instanci, ze které je metoda volaná. \cite{fluentinterface}
+
+Obě knihovny jsou ve spoustě aspektech srovnatelné - obě jsou open-source knihovny vytvořené komunitou a obě jsou vhodné pro komerční použití. K integraci jsem ovšem zvolil knihovna Fluent.Docker. Tato knihovna obsahuje větší abstrakci jednotlivých příkazů a je tedy mnohem jednoduší na použití a integraci.
+
+\subsection{Správa sítě}
+
+Správu virtualizované sítě má v nové knihovně na starost třída \inlinecode{NetworkManager}, která se stará o vytváření, nastavení a nakonec i destrukci sítě. 
+Samotné vytváření a destrukce sítí je ovšem realizováno třídou \inlinecode{DockerNetworkDriver}. Tato třída obsahuje metodu \inlinecode{CreateNetwork(string, int)}, kde jako argumenty požaduje název sítě a počet dostupných IP adres. Toto číslo ovšem musí zahrnovat i implicitně obsazené IP adresy - tedy IP adresu sítě, broadcast adresu a pro Docker i IP adresu směrovače. Informace o počtu potřebných implicitních zařízeních je uložena ve statické třídě \inlinecode{NetworkConstants}.
+
+Metoda \inlinecode{CreateNetwork} nejdříve zjistí, jaké rozsahy IP adres jsou obsazené a jaký rozsah je možno obsadit. Následně na základě těchto informací vytvoří nejmenší možnou síť, do které se bude vejít požadovaný počet IP adres. Zároveň třída se snaží vyplňovat mezery mezi adresními prostory, pokud to je možné. Metoda následně pouze vrací instanci třídy \inlinecode{NetworkInfo}, která obsahuje všechny informace o dané síti. Třída \inlinecode{DockerNetworkDriver} si udržuje instance všech vytvořených sítí, aby byla schopna následně při ukončování vytvořené sítě smazat. 
+
+Třída \inlinecode{NetworkManager} má k vytvoření sítě tyto tři metody:
+
+\begin{enumerate}
+    \item \inlinecode{AddNode(string)} - přidání zařízení (kontejneru) do správce, kde argumentem je identifikátor zařízení
+    \item \inlinecode{AddConnection(string, string)} - přidání propojení mezi dvěma zařízeními, kde argumentem jsou identifikátory zařízení, mezi kterýma má býti propojení
+    \item \inlinecode{BuildNetwork()} - metoda, která spustí výpočet a následné vytvoření sítě ve virtualizovaném prostředí
+\end{enumerate}
+
+Pro vytvoření úspěšného propojení mezi dvěma zařízeními je potřeba přidat všechna zařízení za pomoci funkce \inlinecode{AddNode}, jinak třída vyhodí výjimku při sestavování sítě. Po zaregistrovaní všech zařízení a všech propojení je zavolána metoda \inlinecode{BuildNetwork}. 
+
+Tato metoda nejdříve vytvoří strukturu uložení všech informací o síti a kontejnerech. Metody \inlinecode{AddNode} a \inlinecode{AddConnection} totiž pouze přidají dané informace do front, které jsou v tento moment zpracovávány za pomoci metody \inlinecode{ConstructDataStructure}. Metoda nejdříve pomocí metody \inlinecode{RegisterNode} zaregistruje všechny zařízení, což vede hlavně k přirazení unikátního indexu všem zařízením. Reference mezi jménem a indexem je uložena ve slovníku \inlinecode{nodeMapper}. 
+
+Následně metoda zaregistruje s pomocí metody \inlinecode{RegisterConnection} všechna spojení, což znamená že dvojice indexů zařízení, mezi kterýma má existovat spojení, jsou přidány do seřazené množiny, která je uložena v atributu \inlinecode{connections}. Tyto dva indexy jsou ovšem v relaci a platí $\forall x,y \in K, xSy \Rightarrow ySx$, kde $K$ představuje množinu všech indexů zařízení a $S$ je binární relace spojení zařízení zařízení.
+Proto do atributu \inlinecode{connections} jsou ukládány obě symetrické hodnoty, primárně pro zjednodušení vyhledávání v této kolekci.
+
+Jednotlivé informace o síťovém nastavení zařízení jsou uložena v seznamu \inlinecode{nodeConfigurations}, který je indexován za pomoci atributu \inlinecode{nodeMapper}. Ten obsahuje instance třídy \inlinecode{ContainerNetworkConf}, která obsahuje o všech sítích, ke kterým je dané zařízení připojeno a jakou má v něm přiřazenou IP adresu, o adrese implicitního směrovače a o všech statických směrováních. Statická směrování jsou reprezentována za pomoci třídy \inlinecode{NetworkRoute}, jehož instance obsahuje všechny potřebné informace. 
+
+Samotné reálné vytváření sítě počíná vytvořením tzv. správcovské sítě, do které budou připojena všechna zařízení. Ta slouží primárně pro případnou komunikaci s testovací službou. Tato síť je v docker terminologii typu bridge. Všechna zařízení budou mít nastavena směrovač této sítě jako implicitní bránu.
+
+Následně třída pro každé spojení vytvoří separátní síť typu bridge. Na první pohled se může zdát, že toto je velice neefektivní řešení. Důvod, proč jsem zvolil toto řešení, je ovšem kvůli technologickému omezení. V každé síti typu bridge je vytvořen implicitní směrovač, který rozesílá komunikaci daným kontejnerům. Tím pádem, každá komunikace v základním nastavení jde z odchozího kontejneru do směrovače a následně do cílového kontejneru. Tím ovšem by byla porušena požadovaná topologie. 
+
+Z tohoto důvodu je mezi každýma dvěma kontejnery vytvořena oddělená síť. Za pomoci statického směrování je pak následně možné směrovat komunikaci do každého zařízení dle požadované topologie. 
+
+Metoda tedy nejdříve vytvoří s pomocí metody \inlinecode{CreateNetwork} pro každé připojení síť a informace o dané síti uloží seznamu \inlinecode{networkInfos}. Index sítě je následně uložen do slovníku \inlinecode{networkIndexer}. Oproti atributu \inlinecode{connections}, slovník neobsahuje obě symetrické hodnoty indexů. Platí, že $\forall (x,y) \in K, x < y$. 
+
+Po vytvoření všech sítí metoda vypočítá statického směrovaní pro každý kontejner. Tento proces si zaslouží přiblížení. Metoda iteruje pro všechny zařízení všechny položky ve slovníku \inlinecode{Dictionary<(int, int), int> networkIndexer}. Pokud mezi zařízeními existuje přímé spojení tak směrování je jednoduché, daná síť je směrována na dané přilehlé zařízení. Problem nastává, pokud síť není přímo připojena k zařízení. Je potřeba zjistit, jakým směrem má být zpráva odeslána pro úspěšné doručení.
+
+Tato informace je zjišťována za pomoci algoritmu BFS implementováno metodou \inlinecode{BFS}\customtodo{Popsat bfs a možná zdroj}. Za pomoci tohoto algoritmu je zjištěna nejkratší cesta do dané sítě. Metoda vrací seznam zařízení, mimo počátečního zařízení, který reprezentuje cestu od počátečního zařízení do cílového zařízení, neboli do dané sítě. Podstatnou informací je ovšem první položka v seznamu, tedy to sousední zařízení, kterému musí být zpráva odeslaná z daného zařízení, aby dosáhla cílového. To je nastaveno jako směr, kterým mají být všechny zprávy do dané sítě odesílány. Tento způsob implementace dokáže nastavit všechny požadované topologie. 
+
+\subsubsection{Správa kontejnerů}
