@@ -19,7 +19,7 @@ Představu nové architektury je možné vidět na obrázku \ref{fig:architectur
 
 Na obrázku lze vidět tři druhy zařízení, která jsou barevně oddělená. Zeleně označeným zařízením je původní \textit{testovací služba}. Ta řídí testovací běh a vyhodnocuje výsledky testů. Testovací služba běží přímo v operačním systému agenta, tedy bez žádné virtualizace. Uvnitř modře označeného virtualizovaného prostředí lze následně vidět jednu z možných simulovaných topologií, v tomto případě topologii hvězdy. 
 
-Každý objekt uvnitř virtualizovaného prostředí představuje právě jedno zařízení, které je kontejnerizováno. \textit{Testované zařízení} představuje vyvíjený produkt, který chceme testovat. Ostatní oranžová zařízení představují \textit{testovací partnery} potřebné k testování. Rozdílem od stávající knihovny je, že ne všichni testovací partneři musí být k testovací službě připojeni. Z obrázku lze vidět, že pouze testovací partner 1 a 4 jsou připojeni k testovací službě. Je zde ale předpoklad, že alespoň jedno zařízení musí být k testovací službě připojeno.
+Každý objekt uvnitř virtualizovaného prostředí představuje právě jedno zařízení, které je kontejnerizováno. \textit{Testované zařízení} představuje vyvíjený produkt, který chceme testovat. Ostatní oranžová zařízení představují \textit{testovací partnery} potřebné k testování. Rozdílem od stávající knihovny je, že ne všichni testovací partneři musí být k testovací službě připojeni. Na obrázku lze vidět, že v tomto případě pouze testovací partner 1 a 4 jsou připojeni k testovací službě. Je zde ale předpoklad, že alespoň jedno zařízení musí být k testovací službě připojeno.
 
 Novým typem zařízení je červeně označený \textit{odposlouchávač komunikace}. Toto zařízení jak už z názvu vyplívá bude zaznamenávat komunikaci na právě jednom spojení dvou zařízení. Zároveň bude připojeno k testovací službě, což znamená že komunikace bude zaznamenávána pouze v průběhu testu a pro každý test bude vytvořen separátní záznam.
 
@@ -73,7 +73,9 @@ Komunikaci v rámci testovací knihovny lze rozdělit do dvou kategorií:
 
 Propojení mezi jednotlivými zařízeními bude zprostředkováno testovací knihovnou, respektive všechny zařízení budou propojena dle dané konfigurace, ale nebude nijak kontrolováno, pouze dle požadavku může být komunikace odposlouchávána a ukládaná. 
 
-Komunikace s testovací službou bude probíhat za stejných podmínek, jako tomu je doposud. Testovací knihovna přesně definuje strukturu zpráv, které obsahují typ, délku zprávy a případně další data zprávy. Možnou komunikaci mezi testovací službou a účastníky testu, tedy zařízeními uvnitř virtualizovaného prostředí, můžeme vidět na obrázku \ref{fig:seqdiag}. Jak jsem již zmínil dříve, ne všechna zařízení musí komunikovat s testovací službou a jejich počet je definován v konfiguračním souboru virtualizovaného prostředí. 
+Komunikace s testovací službou bude probíhat za stejných podmínek, jako tomu je doposud. Testovací knihovna přesně definuje strukturu zpráv. Každá zpráva obsahuje v prvních dvou bajtech typ zprávy, v dalších dvou bajtech délku dat zprávy a případná data zprávy, jejichž délka je uložena v délce dat zprávy. Každá zpráva tedy musí mít minimálně 4 bajty. 
+
+Možnou komunikaci mezi testovací službou a účastníky testu, tedy zařízeními uvnitř virtualizovaného prostředí, můžeme vidět na sekvenčním diagramu, které je na obrázku \ref{fig:seqdiag}. Na něm lze vidět, jak by probíhala komunikace při běhu o jednom testu. Jak jsem již ale zmínil dříve, nově ne všechna zařízení musí komunikovat s testovací službou. 
 
 \begin{figure}[htbp]
     \centering 
@@ -83,11 +85,9 @@ Komunikace s testovací službou bude probíhat za stejných podmínek, jako tom
     \label{fig:seqdiag}
 \end{figure}
 
-
-
 \section{Testovací služba}
 
-Jádrem testovacího běhu zůstane testovací služba, která musí komunikovat a tím ovládat alespoň jedno zařízení. Ve stávající implementaci byla na počátku testování vytvořena jedna instance testovací služby, která existovala po celou dobu testování. Nově bude životnost testovací služba navázána na dané virtualizované prostředí. Tedy, testovací služba vzniká až po úspěšném vytvoření virtualizovaného prostředí.  
+Jádrem testovacího běhu zůstane testovací služba, která musí komunikovat a tím ovládat alespoň jedno zařízení. Ve stávající implementaci byla na počátku testování vytvořena jedna instance testovací služby, která existovala po celou dobu testování. Nově bude životnost testovací služba navázána na dané virtualizované prostředí. Tedy, testovací služba vznikne až po úspěšném vytvoření virtualizovaného prostředí. Při změně virtualizovaného prostředí bude testovací služba ukončena a po vytvoření nového prostředí spuštěna nová instance.
 
 Fungování testovací služby lze vidět na novém diagramu aktivit testovací služby na obrázku \ref{fig:activitydiagramservice}, na kterém jsou označeny i změny oproti původnímu diagramu aktivit testovací služby.
 
@@ -101,9 +101,30 @@ Fungování testovací služby lze vidět na novém diagramu aktivit testovací 
 
 Po sestavení virtualizovaného prostředí testovací služba započne inicializační fázi, ve které se všechna zařízení ovládaná testovací službou připojí k testovací službě. Tedy mimo přímých účastníků testu se v této fázi připojí i všichni odposlouchávači komunikace, pokud nějací existují. 
 
-Testovací služba sama o sobě nemá ponětí o tom, které testy budou spuštěny a které ne. Testovací služba pouze zpracovává požadavky, které na ni přichází. Po obdržení požadavku na spuštění testu testovací služba spouští daný test.
+Testovací služba sama o sobě nemá ponětí o tom, které testy budou spuštěny a které ne, ale pouze zpracovává požadavky, které na ni přichází. Tedy po obdržení požadavku na spuštění testu testovací služba spouští všechny fáze testu. Při ukončení testovací služba odesílá všem připojeným účastníkům zprávu o ukončení testování, čímž mohou být připojená zařízení taktéž ukončena. O úspěšné ukončení se ovšem stará integrace virtualizovaného prostředí.
 
+\section{Testování}
 
+Nová testovací knihovna zachová proces testování a podobu jednotlivých testu ve stejné podobě jako tomu bylo doposud. K tomu aby bylo možné testovat za použití testovací knihovny, tak je potřeba implementovat rozhraní pro testované zařízení, které definuje potřebné funkce ke komunikaci s testovací službou. 
+
+Definované rozhraní je ale v rámci terminologie nyní lepší nazvat jako rozhraní pro účastníka testu, jelikož rozhraní může využít jakékoliv zařízení, které je potřeba synchronizovat s testovací službou. I v aktuální implementaci testovací partneři obsahovali implementaci tohoto rozhrání a jejich běh byl identický. 
+
+Pro připomenutí, rozhraní pro test následně definuje tři fáze testu, které jsou:
+
+\begin{enumerate}
+    \item Příprava na testování -- definování potřebných struktur, inicializace.
+    \item Testování -- provedení samotného testu.
+    \item Úklid po testu -- uvolnění využitých zdrojů a uvedení zařízení do původního stavu.
+\end{enumerate}
+
+Běh účastníka testu, který je připojen k testovací službě, můžeme vidět na diagramu aktivit na obrázku \ref{fig:act_diag_device}. Jeho aktivity zůstanou identické. Změna nastává v definovaných synchronizačních bodech, které jsou na obrázku označeny modře. Testovací služba obdrží informace o dokončení každé fáze testu pouze od těch účastníků, co jsou k ní připojený. Tedy, pokud je potřeba synchronizovat nějaké zařízení, které není připojeno k testovací službě, tak potom by toto byl úkol jednoho z testovacích partnerů, který k testovací službě připojen je. 
+
+\begin{figure}
+    \centering 
+    \includegraphics[height=0.98\textheight]{assets/img/bp_assets/activitydiagramdevice.pdf}
+    \caption{Diagram aktivit účastníka testu}
+    \label{fig:act_diag_device}
+\end{figure}
 
 
 
