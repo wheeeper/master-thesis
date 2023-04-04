@@ -3,6 +3,21 @@
 V této kapitole se budu věnovat implementaci navržených úprav z kapitoly \ref{chap:design}.
 
 
+\section{Příprava stávající implementace testovací knihovny}
+Původní testovací knihovna obsahovala toto rozdělení implementace, dle zdrojových složek:
+
+\begin{itemize}
+    \item \inlinecode{core} - implementace celé testovací knihovny v jazyce \csharp, tedy implementace testovací služby, testovacích partnerů atd.
+    \item \inlinecode{cpp} - implementace pro účastníka testování v jazyce \cpp, včetně potřebných rozhraní.
+\end{itemize}
+
+V předchozí implementaci nebylo potřeba žádné zařízení vytvářet externě mimo testovací projekt. Díky tomuto novému požadavku je tedy logické rozdělit původní testovací knihovnu na tyto dva celky:
+
+\begin{itemize}
+    \item \inlinecode{TestLib.Core} (složka \inlinecode{core}) - jádro testovací knihovny, které obsahuje všechna potřebná rozhraní, definice zpráv a správce běhu testovacího partnera, respektive účastníka testu
+    \item \inlinecode{TestLib} (složka \inlinecode{test\_lib}) - celá testovací knihovna, která mimo jádra testovací služby obsahuje testovací službu, integraci virtualizovaného prostředí a další pomocné entity. Testovací jádro je do složky přidáno jako závislost. 
+\end{itemize}
+
 \section{Orchestrace virtualizovaného prostředí}
 Testovací knihovna k úspěšnému vytvoření potřebuje primárně umět tyto aktivity:
 
@@ -27,15 +42,15 @@ Obě knihovny jsou ve spoustě aspektech srovnatelné - obě jsou open-source kn
 \subsection{Správa sítě}
 
 Správu virtualizované sítě má v nové knihovně na starost třída \inlinecode{NetworkManager}, která se stará o vytváření, nastavení a nakonec i destrukci sítě. 
-Samotné vytváření a destrukce sítí je ovšem realizováno třídou \inlinecode{DockerNetworkDriver}. Tato třída obsahuje metodu \inlinecode{CreateNetwork(string, int)}, kde jako argumenty požaduje název sítě a počet dostupných IP adres. Toto číslo ovšem musí zahrnovat i implicitně obsazené IP adresy - tedy IP adresu sítě, broadcast adresu a pro Docker i IP adresu směrovače. Informace o počtu potřebných implicitních zařízeních je uložena ve statické třídě \inlinecode{NetworkConstants}.
+Samotná realizace vytváření a destrukce sítí prostřednictvím softwaru Docker je ovšem realizována prostřednictvím třídy \inlinecode{DockerNetworkDriver}. Tato třída obsahuje metodu \inlinecode{CreateNetwork(string, int)}, kde jako argumenty požaduje název sítě a počet dostupných IP adres. Toto číslo ovšem musí zahrnovat i počet implicitně obsazených IP adres - tedy IP adresu sítě, broadcast adresu a pro Docker i IP adresu směrovače. Informace o počtu potřebných implicitních zařízeních je uložena ve statické třídě \inlinecode{NetworkConstants}.
 
-Metoda \inlinecode{CreateNetwork} nejdříve zjistí, jaké rozsahy IP adres jsou obsazené a jaký rozsah je možno obsadit. Následně na základě těchto informací vytvoří nejmenší možnou síť, do které se bude vejít požadovaný počet IP adres. Zároveň třída se snaží vyplňovat mezery mezi adresními prostory, pokud to je možné. Metoda následně pouze vrací instanci třídy \inlinecode{NetworkInfo}, která obsahuje všechny informace o dané síti. Třída \inlinecode{DockerNetworkDriver} si udržuje instance všech vytvořených sítí, aby byla schopna následně při ukončování vytvořené sítě smazat. 
+Metoda \inlinecode{CreateNetwork} nejdříve zjistí, jaké rozsahy IP adres jsou obsazené a jaké rozsahy jsou volné. Následně na základě těchto informací vytvoří nejmenší možnou síť, do které se bude vejít požadovaný počet IP adres. Zároveň třída se snaží vyplňovat mezery mezi adresními prostory, pokud to je možné. Metoda následně pouze vrací instanci třídy \inlinecode{NetworkInfo}, která obsahuje všechny potřebné informace o dané síti. Třída \inlinecode{DockerNetworkDriver} si udržuje instance všech vytvořených sítí, aby byla schopna následně při ukončování vytvořené sítě smazat. 
 
 Třída \inlinecode{NetworkManager} má k vytvoření sítě tyto tři metody:
 
 \begin{enumerate}
     \item \inlinecode{AddNode(string)} - přidání zařízení (kontejneru) do správce, kde argumentem je identifikátor zařízení
-    \item \inlinecode{AddConnection(string, string)} - přidání propojení mezi dvěma zařízeními, kde argumentem jsou identifikátory zařízení, mezi kterýma má býti propojení
+    \item \inlinecode{AddConnection(string, string)} - přidání propojení mezi dvěma zařízeními, kde argumentem jsou identifikátory zařízení, mezi kterýma má býti spojení
     \item \inlinecode{BuildNetwork()} - metoda, která spustí výpočet a následné vytvoření sítě ve virtualizovaném prostředí
 \end{enumerate}
 
@@ -46,18 +61,108 @@ Tato metoda nejdříve vytvoří strukturu uložení všech informací o síti a
 Následně metoda zaregistruje s pomocí metody \inlinecode{RegisterConnection} všechna spojení, což znamená že dvojice indexů zařízení, mezi kterýma má existovat spojení, jsou přidány do seřazené množiny, která je uložena v atributu \inlinecode{connections}. Tyto dva indexy jsou ovšem v relaci a platí $\forall x,y \in K, xSy \Rightarrow ySx$, kde $K$ představuje množinu všech indexů zařízení a $S$ je binární relace spojení zařízení zařízení.
 Proto do atributu \inlinecode{connections} jsou ukládány obě symetrické hodnoty, primárně pro zjednodušení vyhledávání v této kolekci.
 
-Jednotlivé informace o síťovém nastavení zařízení jsou uložena v seznamu \inlinecode{nodeConfigurations}, který je indexován za pomoci atributu \inlinecode{nodeMapper}. Ten obsahuje instance třídy \inlinecode{ContainerNetworkConf}, která obsahuje o všech sítích, ke kterým je dané zařízení připojeno a jakou má v něm přiřazenou IP adresu, o adrese implicitního směrovače a o všech statických směrováních. Statická směrování jsou reprezentována za pomoci třídy \inlinecode{NetworkRoute}, jehož instance obsahuje všechny potřebné informace. 
+Jednotlivé informace o síťovém nastavení zařízení jsou uložena v seznamu \inlinecode{nodeConfigurations}, který je indexován za pomoci atributu \inlinecode{nodeMapper}. Ten obsahuje instance třídy \inlinecode{ContainerNetworkConf}, která obsahuje informace o všech sítích, ke kterým je dané zařízení připojeno a jakou má v něm přiřazenou IP adresu, o adrese implicitního směrovače a seznam všech statických směrování. Statická směrování jsou reprezentována za pomoci třídy \inlinecode{NetworkRoute}, jehož instance obsahuje všechny potřebné informace. 
 
-Samotné reálné vytváření sítě počíná vytvořením tzv. správcovské sítě, do které budou připojena všechna zařízení. Ta slouží primárně pro případnou komunikaci s testovací službou. Tato síť je v docker terminologii typu bridge. Všechna zařízení budou mít nastavena směrovač této sítě jako implicitní bránu.
+Samotné reálné vytváření sítě počíná vytvořením tzv. správcovské sítě, do které budou připojena všechna zařízení. Ta slouží primárně pro případnou komunikaci s testovací službou. Tato síť je typu bridge. Všechna zařízení budou mít nastavena směrovač této sítě jako implicitní bránu.
 
-Následně třída pro každé spojení vytvoří separátní síť typu bridge. Na první pohled se může zdát, že toto je velice neefektivní řešení. Důvod, proč jsem zvolil toto řešení, je ovšem kvůli technologickému omezení. V každé síti typu bridge je vytvořen implicitní směrovač, který rozesílá komunikaci daným kontejnerům. Tím pádem, každá komunikace v základním nastavení jde z odchozího kontejneru do směrovače a následně do cílového kontejneru. Tím ovšem by byla porušena požadovaná topologie. 
+Následně třída pro každé spojení vytvoří separátní síť typu bridge. Na první pohled se může zdát, že toto je velice neefektivní řešení. Důvod, proč jsem zvolil toto řešení, je ovšem kvůli technologickému omezení. V každé síti typu bridge je vytvořen implicitní směrovač, který rozesílá komunikaci daným kontejnerům. Tím pádem, každá komunikace v základním nastavení jde z odchozího kontejneru do směrovače a následně do cílového kontejneru. Tím by ale byla porušena požadovaná topologie. Z tohoto důvodu je pro každý spoj vytvořena nová síť. Za pomoci statického směrování je pak následně možné směrovat komunikaci do každého zařízení dle požadované topologie. 
 
-Z tohoto důvodu je mezi každýma dvěma kontejnery vytvořena oddělená síť. Za pomoci statického směrování je pak následně možné směrovat komunikaci do každého zařízení dle požadované topologie. 
+Metoda tedy nejdříve vytvoří s pomocí metody \inlinecode{CreateNetwork} pro každé připojení síť a informace o dané síti uloží seznamu \inlinecode{networkInfos}. Index sítě je následně uložen do slovníku \inlinecode{networkIndexer}, kde klíčem je dvojice indexů zařízení, mezi kterýma daná síť, a tedy spojení, existuje. Oproti atributu \inlinecode{connections}, slovník neobsahuje obě symetrické hodnoty indexů. Platí, že $\forall (x,y), x \land y \in K, x < y$. 
 
-Metoda tedy nejdříve vytvoří s pomocí metody \inlinecode{CreateNetwork} pro každé připojení síť a informace o dané síti uloží seznamu \inlinecode{networkInfos}. Index sítě je následně uložen do slovníku \inlinecode{networkIndexer}. Oproti atributu \inlinecode{connections}, slovník neobsahuje obě symetrické hodnoty indexů. Platí, že $\forall (x,y) \in K, x < y$. 
+Po vytvoření všech sítí metoda vypočítá statického směrovaní pro každé zařízení. Tento proces si zaslouží přiblížení. Metoda iteruje pro všechny zařízení všechny položky ve slovníku \inlinecode{networkIndexer}. Pokud mezi zařízeními existuje přímé spojení tak směrování je jednoduché, daná síť je směrována na dané přilehlé zařízení. Problem nastává, pokud síť není přímo připojena k zařízení. V tento moment je potřeba zjistit, jakým směrem má být zpráva odeslána pro úspěšné doručení.
 
-Po vytvoření všech sítí metoda vypočítá statického směrovaní pro každý kontejner. Tento proces si zaslouží přiblížení. Metoda iteruje pro všechny zařízení všechny položky ve slovníku \inlinecode{Dictionary<(int, int), int> networkIndexer}. Pokud mezi zařízeními existuje přímé spojení tak směrování je jednoduché, daná síť je směrována na dané přilehlé zařízení. Problem nastává, pokud síť není přímo připojena k zařízení. Je potřeba zjistit, jakým směrem má být zpráva odeslána pro úspěšné doručení.
+Tato informace je zjišťována za pomoci algoritmu BFS, jenž je implementován ve stejnojmenné metodě.\customtodo{Popsat bfs a možná zdroj}. Za pomoci tohoto algoritmu je zjištěna nejkratší cesta do dané sítě. Metoda obdrží v argumentech index počátečního a konečného zařízení a následně vrátí seznam zařízení, bez počátečního zařízení, který reprezentuje cestu od počátečního zařízení do cílového zařízení, neboli do dané sítě. Podstatnou informací je ovšem první položka v seznamu, tedy to sousední zařízení, kterému musí být zpráva odeslaná z daného zařízení, aby dosáhla cílového. To je nastaveno jako směr, kterým mají být všechny zprávy do dané sítě odesílány. Tento způsob implementace dokáže nastavit všechny požadované topologie. Zároveň vždy odesílá zprávy nejkratší možnou cestou.
 
-Tato informace je zjišťována za pomoci algoritmu BFS implementováno metodou \inlinecode{BFS}\customtodo{Popsat bfs a možná zdroj}. Za pomoci tohoto algoritmu je zjištěna nejkratší cesta do dané sítě. Metoda vrací seznam zařízení, mimo počátečního zařízení, který reprezentuje cestu od počátečního zařízení do cílového zařízení, neboli do dané sítě. Podstatnou informací je ovšem první položka v seznamu, tedy to sousední zařízení, kterému musí být zpráva odeslaná z daného zařízení, aby dosáhla cílového. To je nastaveno jako směr, kterým mají být všechny zprávy do dané sítě odesílány. Tento způsob implementace dokáže nastavit všechny požadované topologie. 
+\subsection{Správa kontejnerů}
 
-\subsubsection{Správa kontejnerů}
+Stejně jako síť, i kontejnery mají svého správce, realizovaného třídou \inlinecode{ContainerManager}. Každý kontejner je podobně jako v případě sítí registrován s pomocí metody \inlinecode{AddContainer(string, ContainerConf)}, kde metoda obdrží v argumentech název a nastavení zařízení, získaného z konfiguračního souboru. To je uloženo do fronty pro následné zpracování.
+
+Po přidání všech zařízení je možné zavolat metodu \inlinecode{Build}. Ta očekává jako argument instanci třídy \inlinecode{NetworkManager}, která již má vypočítané nastavení sítě daných zařízení. Nastavení pro jednotlivé zařízení jsou získávána za pomoci metody \inlinecode{NetworkManager.GetContainerConf(string)}, kde argumentem je název zařízení. 
+
+Metoda \inlinecode{Build} následně zpracovává všechna zařízení ve frontě. Pokud obraz na zařízení je definován za pomoci Dockerfile, tak poté před vytvořením zařízení metoda \inlinecode{BuildImage} sestaví daný obraz. Metoda nejdříve zkontroluje, zdali daný obraz Dockerfilu již nevytvořila. Tuto kontrolu provádí tím, že při vytvoření si uloží hash zdrojového souboru do slovníku \inlinecode{imageTags}, kde hash souboru je klíčem a následně název vytvořeného obrazu je hodnotou ve slovníku. Po zajištění existence obrazu tedy metoda \inlinecode{BuildImage} vrátí název odpovídajícího obrazu. 
+
+Vytvoření samotného kontejneru je následně provedeno metodou \inlinecode{CreateContainer}. Ta dostane jako argument název zařízení, název obrazu, instanci nastavení zařízení a instanci nastavení sítě zařízení. 
+
+Každá kontejner je definovaný za pomoci rozraní \inlinecode{IVMContainer}. Ten obsahuje tyto metody:
+
+\begin{itemize}
+    \item \inlinecode{AddNetworkConf(ContainerNetworkConf)} - přidá nastavení sítě.
+    \item \inlinecode{AddCommand(string)} - přidá příkaz, který bude spuštěn po spuštění kontejneru.
+    \item \inlinecode{AddEnvironmentVariables(Dictionary<string, string>)} - přidá proměnné do prostředí kontejneru.
+    \item \inlinecode{AddCapability(string)} - přidá schopnost, neboli práva, kontejneru.
+    \item \inlinecode{RunPriviledged()} - dá správcovská práva kontejneru.
+    \item \inlinecode{ExposePort(int,int)} - zpřístupní port kontejneru do hostitelského zařízení. První argument je číslo portu v kontejneru, druhý argument je port, ze kterého daný port bude přístupný na hostitelském zařízení. 
+    \item \inlinecode{Mount(string,string)} - zpřístupní složku na hostitelském zařízení v kontejneru. První argument je cesta na hostitelském zařízení, druhý cesta v kontejneru.
+    \item \inlinecode{Tty()} - donutí kontejner běžet i po dokončení všech příkazů.
+    \item \inlinecode{Build()} - sestaví daný kontejner.
+    \item \inlinecode{Start()} - spustí daný kontejner. Metoda vrací boolean hodnotu o správnosti spuštění kontejneru.
+    \item \inlinecode{Stop()} - zastaví daný kontejner.
+    \item \inlinecode{Dispose()} - zničí všechny alokované prostředky, včetně vytvořeného kontejneru v Docker.
+\end{itemize}
+
+Pomocí těchto příkazů je každý kontejner nastavován a realizace těchto nastavení je poté na dané implementaci rozhraní. V aktuální implementaci existují tyto dvě implementace kontejnerů: 
+
+\begin{itemize}
+    \item \inlinecode{DefaultContainer} - základní kontejner vycházející z operačního systému Ubuntu. Reprezentován je enumerátorem \inlinecode{ContainerType.DEFAULT} 
+    \item \inlinecode{NetworkLogger} - kontejner, který zajišťuje odposlouchávání sítě. Reprezentován je enumerátorem \inlinecode{ContainerType.NETWORK\_LOGGER}
+\end{itemize}
+
+Oba dva typy kontejnerů jsou rozlišeny za pomoci enumerátoru \inlinecode{ContainerType}. Následně rozšiřující statická metoda enumerátoru \inlinecode{GetInstance} dokáže vytvořit instanci daného typu kontejneru. Metoda zároveň obdrží argumenty pro konstruktor daného kontejneru. Hlavními argumenty jsou název kontejneru a název obrazu kontejneru. Kontejner typu \inlinecode{NetworkLogger} může ještě obdržet instanci třídy \inlinecode{ServiceConfiguration}, díky které obdrží nastavení testovací služby, ke které se následně připojí. V opačném případě pouze vypisuje zachycenou komunikaci.
+
+Metoda \inlinecode{CreateContainer} následně vrátí instanci kontejneru, která je následně uložena do slovníku \inlinecode{containers}, kde klíčem je název zařízení. 
+
+
+\subsection{Správce celého virtualizovaného prostředí}
+
+Předchozí zmíněné správce je potřebo orchestrovat společně. K tomuto slouží třída \inlinecode{VirtualEnvironmentManager}. Třída obdrží instanci \inlinecode{EnvironmentConfiguration}, která reprezentuje nastavení virtualizovaného prostředí definovaného v sekci \ref{sec:design_virt}. Následně také obdrží instanci třídy \inlinecode{ServiceConfiguration}, ve které je obsaženo nastavení testovací služby.
+
+Třída v sobě obsahuje instance obou dvou správců \inlinecode{NetworkManager} a \inlinecode{ContainerManager}. V konstruktoru je zavolána metoda \inlinecode{SetupEnvironment}, která zaregistruje všechny zařízení a připojení mezi nimi. Zároveň, pokud dle nastavení je potřeba zachytávat na daném spojení komunikaci, tak také přidá adekvátně dané odposlouchávače komunikace. 
+
+Zavoláním metody \inlinecode{Build} je následně vytvořeno celé prostředí. Nejdříve je vytvořena požadovaná síť a následně jsou vytvořeny všechny kontejnery. Na konci metoda spustí všechny kontejnery.
+
+Za pomoci metody \inlinecode{Stop} je poté následně možné zastavit všechny kontejnery. Nakonec, metodou \inlinecode{Dispose} jsou následně odstraněny všechny vytvořené prostředky prostřednictvím daných správců. 
+
+\subsection{Ošetření chyb}
+
+Implementace virtualizovaného prostředí ošetřuje všechny chyby tím, že v případě jejich vzniku vyhodí odpovídající výjimku. Je tedy potřeba následně tyto chyby v případě jejich vzniku zachytávat a adekvátně vyhodnotit.
+
+Ovšem, pokud je program násilně ukončen, tak může dojít k nesmazaní daných vytvořených prostředků v Docker prostředí. To může způsobit jejich akumulaci a v případě sítě dokonce selhání vytvoření sítě. Testovací knihovna proto definuje ve statické třídě \inlinecode{TestLibConstants} proměnnou \inlinecode{ResourcePrefix}, který je přidán ke všem vytvořeným prostředkům.
+
+Díky tomu může knihovna identifikovat jím vytvořené prostředky. Každý správce má tedy implementovanou metodu pro odstranění zbylých prostředků. Ty jsou volány prostřednictvím metody \inlinecode{RemoveHangingResources} v konstruktoru správce virtualizovaného prostředí před započetím všech akcí k vytvoření nového prostředí.
+
+\subsection{Odposlouchávání komunikace}
+
+K odposlouchávání komunikace byl vytvořen nový program pod názvem \inlinecode{NetworkLogger}. Program využívá knihovnu SharpPcap\cite{sharppcap} pro zachytávání komunikace na daném virtuálním rozhraní. 
+
+Program přijímá variabilní počet argumentů v závislosti na módu fungování. Program podporuje dva módy fungování
+
+\begin{enumerate}
+    \item Mód bez připojení k testovací službě
+    \item Mód s připojením k testovací službě
+\end{enumerate}
+
+K aktivaci prvního módu je potřeba předat programu přepínač \inlinecode{--no-service}, který mód aktivuje. Následně program očekává seznam názvů rozhraní, oddělených mezerou, ze kterých má zachytávat komunikaci. Při spuštění program zachytává všechnu komunikaci na daných rozhraní a následně vypisuje jednotlivé zachycené zprávy na standardní výstup.
+
+V druhém módu testovací knihovna očekává tyto poziční argumenty:
+
+\begin{enumerate}
+    \item Složku, kde bude ukládat zachycené zprávy do souboru.
+    \item Adresu, na které běží testovací služba.
+    \item Port, na kterém běží testovací služba.
+    \item Variabilní počet jmen rozhraní, které má zaznamenávat, oddělený mezerou.
+\end{enumerate}
+
+Po obdržení těchto argumentů se program připojí k testovací službě a projde stejnou inicializační fází, jako všichni ostatní účastníci testu. Následně po obdržení zprávy o započnutí testu testovací služba započíná zaznamenávání sítě. Stejně, zaznamenávání je ukončeno při obdržení zprávy o ukončení testu. Jednotlivé testy jsou zaznamenávány zvlášť a ukládány dle obdrženého identifikátoru testu.
+
+Program má definovaný Dockerfile, na základě něhož může být program spuštěn ve virtualizovaném prostředí prostřednictvím softwaru Docker. To je přímo podporováno od Visual Studia 2022\cite{vs2022}, ve kterém jsou všechny projekty tvořeny. Při otevření projektu je vytvořen Docker kontejner, ve kterém se dá projekt následně spouštět a i ladit.
+
+Za pomocí Visual Studia 2022 lze také uveřejnit daný program do Docker repositáře. Po vybrání \inlinecode{Publish} je možné program zveřejnit buď do veřejného Docker repositáře, nebo do soukromě hostovaného repositáře.
+
+Zveřejněný program, neboli obraz, v základu spouští program v módu bez připojení k testovací službě. To lze při vytváření kontejneru změnit a tedy program správně nastavit. 
+
+\section{Integrace virtualizovaného prostředí do testovací knihovny}
+
+Pro integraci virtualizovaného prostředí je potřeba integrovat virtualizované prostředí do služeb testovací knihovny. Původní třída \inlinecode{ServiceRunner} byla tedy přejmenovaná na \inlinecode{ServicesRunner}. Ta v sobě obsahuje instance tříd \inlinecode{TestService} a \inlinecode{VirtualEnvironmentManager}.
+
+Do statické třídy \inlinecode{API} byla přidána statická metoda \inlinecode{BuildEnvironment}. Tato metoda obdrží v argumentu cestu ke konfiguračnímu souboru daného virtualizovaného prostředí. Metoda následně vytvoří dané virtualizované prostředí a spustí testovací službu. 
+

@@ -31,9 +31,19 @@ Novým typem zařízení je červeně označený \textit{odposlouchávač komuni
 \end{figure}
 
 
-\section{Orchestrace virtualizovaného prostředí}
+\section{Orchestrace virtualizovaného prostředí}\label{sec:design_virt}
 
 Důležitou součástí testovací knihovny bude implementace orchestrace virtualizovaného prostředí. To znamená, že testovací služba bude schopna vytvářet jednotlivá virtuální zařízení, které následně automaticky propojí dle požadované topologie a po konci testování daná zařízení ukončí. 
+
+Knihovna bude obsahovat tři správce
+
+\begin{enumerate}
+    \item Správce kontejnerů, tedy zařízení
+    \item Správce sítě
+    \item Správce virtualizovaného prostředí
+\end{enumerate}
+
+Veškerá orchestrace bude procházet přes tyto správce. Správce virtualizovaného prostředí bude obsahovat oba předem zmíněné správce. Tyto budou mít na starost existenci daných zdrojů, dle názvu.
 
 Virtualizované prostředí bude definované za pomoci konfiguračního souboru dle formátu YAML. Hlavní důvod proč využít YAML, místo původního formátu JSON, kterým bylo definováno nastavení testovací knihovny, je co nejbližší přiblížení se aktuálním konvencím v kontextu k Docker compose. Konfigurace bude tedy co nejvíce napodobovat jeho konfigurační soubor. 
 
@@ -55,7 +65,7 @@ Další položkou bude položka \inlinecode{containers}. Ta bude obsahovat infor
 
 V neposlední řadě konfigurační soubor bude obsahovat položku \inlinecode{links}. Ta bude definovat jednotlivá propojení mezi zařízeními, tedy celkovou topologii. V tomto seznamu bude každá položka obsahovat názvy dvou zařízení oddělené dvojtečkou a pro každý záznam bude vytvořeno propojení mezi danými zařízeními.
 
-Povinnou součástí konfiguračního souboru bude celá sekce \inlinecode{service}, sekce \inlinecode{containers}, kde musí být definována nejméně dvě zařízení, která musí obsahovat alespoň kolonky \inlinecode{build} a \inlinecode{type}, a sekce \inlinecode{links}. Ostatní budou nepovinné. \question{Chceme podporu jednoho zařízení?}
+Povinnou součástí konfiguračního souboru bude celá sekce \inlinecode{service}, sekce \inlinecode{containers}, kde musí být definována nejméně jedno zařízení, která musí obsahovat alespoň kolonky \inlinecode{build} a \inlinecode{type}, a sekce \inlinecode{links}. Ostatní budou nepovinné. Při existenci pouze jednoho zařízení může být testovací knihovna využita pro unit testy. 
 
 Testovací knihovna bude kontrolovat, zdali testované prostředí bylo vytvořeno. Pokud ne, nezapočne testování. Zároveň bude kontrolovat zda všechna zařízení byla úspěšně spuštěna. Po konci testování testovací knihovna všechna zařízení ukončí, a vymaže všechny jím definované sítě, kontejnery atd.
 
@@ -75,7 +85,7 @@ Propojení mezi jednotlivými zařízeními bude zprostředkováno testovací kn
 
 Komunikace s testovací službou bude probíhat za stejných podmínek, jako tomu je doposud. Testovací knihovna přesně definuje strukturu zpráv. Každá zpráva obsahuje v prvních dvou bajtech typ zprávy, v dalších dvou bajtech délku dat zprávy a případná data zprávy, jejichž délka je uložena v délce dat zprávy. Každá zpráva tedy musí mít minimálně 4 bajty. 
 
-Možnou komunikaci mezi testovací službou a účastníky testu, tedy zařízeními uvnitř virtualizovaného prostředí, můžeme vidět na sekvenčním diagramu, které je na obrázku \ref{fig:seqdiag}. Na něm lze vidět, jak by probíhala komunikace při běhu o jednom testu. Jak jsem již ale zmínil dříve, nově ne všechna zařízení musí komunikovat s testovací službou. 
+Možnou komunikaci mezi testovací službou a účastníky testu, tedy zařízeními uvnitř virtualizovaného prostředí, můžeme vidět na sekvenčním diagramu z mé bakalářské práce\cite{bakalarka}, který je na obrázku \ref{fig:seqdiag}. Na něm lze vidět, jak by probíhala komunikace při běhu o jednom testu. Jak jsem již ale zmínil dříve, nově ne všechna zařízení musí komunikovat s testovací službou. 
 
 \begin{figure}[htbp]
     \centering 
@@ -117,7 +127,9 @@ Pro připomenutí, rozhraní pro test následně definuje tři fáze testu, kter
     \item Úklid po testu -- uvolnění využitých zdrojů a uvedení zařízení do původního stavu.
 \end{enumerate}
 
-Běh účastníka testu, který je připojen k testovací službě, můžeme vidět na diagramu aktivit na obrázku \ref{fig:act_diag_device}. Jeho aktivity zůstanou identické. Změna nastává v definovaných synchronizačních bodech, které jsou na obrázku označeny modře. Testovací služba obdrží informace o dokončení každé fáze testu pouze od těch účastníků, co jsou k ní připojený. Tedy, pokud je potřeba synchronizovat nějaké zařízení, které není připojeno k testovací službě, tak potom by toto byl úkol jednoho z testovacích partnerů, který k testovací službě připojen je. 
+Běh účastníka testu, který je připojen k testovací službě, můžeme vidět na diagramu aktivit na obrázku \ref{fig:act_diag_device}. Jeho aktivity zůstanou identické. Změna nastává v definovaných synchronizačních bodech, které jsou na obrázku označeny modře. 
+
+Testovací služba obdrží informace o dokončení každé fáze testu pouze od těch účastníků, co jsou k ní připojený. Tedy, pokud je potřeba synchronizovat nějaké zařízení, které není připojeno k testovací službě, tak potom by toto byl úkol jednoho z testovacích partnerů, který k testovací službě připojen je. Zároveň zde existuje možnost vytvořit testovacího partnera, který pouze kontrolovat správnost daného zařízení. 
 
 \begin{figure}
     \centering 
