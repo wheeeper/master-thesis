@@ -86,9 +86,9 @@ Vytvoření samotného kontejneru je následně provedeno metodou \inlinecode{Cr
 Každá kontejner je definovaný za pomoci rozraní \inlinecode{IVMContainer}. Ten obsahuje tyto metody:
 
 \begin{itemize}
-    \item \inlinecode{AddNetworkConf(ContainerNetworkConf)} - přidá nastavení sítě.
+    \item \inlinecode{SetNetworkConf(ContainerNetworkConf)} - přidá nastavení sítě.
     \item \inlinecode{AddCommand(string)} - přidá příkaz, který bude spuštěn po spuštění kontejneru.
-    \item \inlinecode{AddEnvironmentVariables(Dictionary<string, string>)} - přidá proměnné do prostředí kontejneru.
+    \item \inlinecode{SetEnvironmentVariables(Dictionary<string, string>)} - přidá proměnné do prostředí kontejneru.
     \item \inlinecode{AddCapability(string)} - přidá schopnost, neboli práva, kontejneru.
     \item \inlinecode{RunPriviledged()} - dá správcovská práva kontejneru.
     \item \inlinecode{ExposePort(int,int)} - zpřístupní port kontejneru do hostitelského zařízení. První argument je číslo portu v kontejneru, druhý argument je port, ze kterého daný port bude přístupný na hostitelském zařízení. 
