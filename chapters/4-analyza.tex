@@ -108,59 +108,6 @@ Hlavním požadavkem na dané řešení je, aby podporovalo operační systém W
     \item Vagrant. 
 \end{itemize}
 
-\subsubsection{Docker} \customtodo{zmínit docker compose a dockefile}
-Docker je dle mě neznámějším a nejrozšířenějším nástrojem, který zprostředkovává kontejnerizaci. Proto také ve většině případech je většina ostatních nástrojů s Docker srovnávaná. Docker se skládá z několika hlavních komponent, které dohromady tvoří námi požadovaný container engine. Mezi tyto komponenty patří
-
-\begin{itemize}
-    \item Docker Client and Server,
-    \item Docker Containers,
-    \item Docker Images,
-    \item Docker Registries.
-\end{itemize}
-
-Docker Client and Server jak z překladu názvu vyplývá obsahuje klienta a server. Server dostává žádosti od klienta, které následně zpracovává. Architekturu nástroje Docker můžeme vidět na obrázku \ref{fig:docker_arch}. Zajímavou komponentou je Docker Daemon, což je persistentní proces, který neustále běží na pozadí. Klient provádí komunikaci s Docker Daemon prostřednictvím stanového REST API a ten se následovně stará o sestavování, běh a distribuci Docker kontejnerů. Docker server a klient může běžet na jednom stroji, ale zároveň klient se může k serveru připojit i vzdáleně. 
-\cite{turnbull2014docker}\cite{docker_overview}
-
-\begin{figure}[htbp]
-    \centering 
-    \includegraphics[width=0.97\textwidth]{assets/img/docker_arch.pdf}
-    \caption{Docker architektura}
-    \source{Vytvořeno dle předlohy z \cite{turnbull2014docker}}
-    \label{fig:docker_arch}
-\end{figure}
-
-Jednotlivé Docker kontejnery jsou vytvářeny z tzv. Docker Images. Tyto images, neboli v češtině obrazy, obsahují definici všech závislostí a balíčků, potřebných k běhu kontejneru. Způsoby jak vytvářet obrazy jsou dva - buď můžeme definovat vlastní obraz a nebo použít nějakou již vytvořenou předlohu. Je podstatné zmínit, že každý existující obraz může být předlohou pro nový obraz. 
-
-Tyto obrazy následně můžou být uloženy v Docker Registries. Ten slouží jako repositář pro obrazy, který může být buď veřejný, nebo soukromý. Veřejný repositář se nazývá Docker Hub, kde každý může získat kterýkoliv již vytvořený image, a nebo může také nahrát vlastní. \cite{turnbull2014docker} 
-
-Docker v základu nabízí několik druhů síťových ovladačů. Síťový typ \textit{host} umožňuje odstranit izolaci mezi kontejnery a plně využít síť zprostředkovanou hostem, tedy Docker serverem. Oproti tomu síťový typ \textit{overlay} slouží k propojení různých Docker daemonů a umožňuje komunikace mezi nimi. 
-
-Pro naše použití ale začínají být zajímavé až síťové typy \textit{bridge}, \textit{IPvlan} a \textit{MACvlan}. \textit{Bridge} je výchozím síťovým typem, který Docker používá v momentě kdy dva kontejnery potřebují mezi sebou komunikovat na stejném zařízení. \textit{IPvlan} oproti tomu umožňuje uživatelům plnou kontrolu nad IPv4 a IPv6 adresováním a nad druhou a třetí úrovní ISO/OSI modelu. V neposlední řadě \textit{MACvlan} umožňuje kontejnerům přiřadit různé MAC adresy, které tak mohou být odlišné od hostujícího zařízení. To umožňuje kontejnerům vypadat na síti jako fyzické zařízení.
-
-Docker také podporuje vlastní implementace síťových ovladačů. Ty následně mohou být nahrány do stejného repositáře jako Docker obrazy. Bohužel jelikož tyto síťové ovladače jsou zahrnuty do širší kategorie \uv{rozšíření}, tak jejich vyhledávání je náročné a často neobsahují skoro žádný popis. \cite{docker_networking_overview}\cite{docker_brige_overview}
-
-Díky tak širokému využití Docker je jeho podpora rozšířena i pro jazyk \csharp~díky knihovnám, které byly vytvořeny komunitou. Ty umožňují přímo sestavovat a nasazovat kontejnery a spravovat virtuální síť. To velice ulehčuje jeho možné použití v testovací knihovně. 
-
-\subsubsection{Podman}
-Podman je velice podobný Dockeru. Tento nástroj je primárně zaměřený na operační systém Linux, kde pomáhá najít, spustit a nasadit kontejnery dle pravidel OCI. V použití je dokonce až tak podobný, že většina uživatelů může změnit příkaz \inlinecode{docker} na \inlinecode{podman} bez problémů. Rozdíly tam ale přeci jen jsou. 
-
-Podman oproti Docker používá takzvanou \textit{daemon-less} architekturu. Jak už bylo zmíněno, Docker obsahuje neustále běžící proces který se nazývá \textit{daemon}, který poslouchá příkazy od klienta a spravuje všechny procesy spojené s kontejnerizací. Tento přístup vytváří problémy hlavně z bezpečnostního hlediska, jelikož daemon musí být spuštěn s právy správce počítače. Docker sice podporuje od verze v19.03 tzv. \textit{rootless execution}, tedy mód kdy nepotřebuje práva správce, ale při chodu v tomto módu mohou uživatelé narazit na různé limitace.
-
-A na toto se přesně zaměřil Podman. Podman používá pro správu kontejnerů nástroj \textit{systemd}, který ke spuštění využívá práva uživatele, který provádí příkazy. Podman také využívá jiný nástroj \textit{Buildah}, za pomocí něhož je schopen sestavovat kontejnery bez daemona. \cite{podman}\cite{podman_vs_docker}
-
-Podman stejně jako Docker podporuje síťové typy \textit{bridge} a \textit{MACvlan}. Ovšem k jejich použití již potřebuje práva správce počítače. K vyřešení tohoto problému Podman používá síťový typ \textit{slirp4netns}. Ta vytvoří speciální TAP zařízení, fungující na linkové vrstvě ISO/OSI modelu a umožňuje komunikaci mezi kontejnery, které jsou ovšem takto fungují izolovaně od sebe. \cite{podman_network}
-
-Jak jsem řekl na začátku, Podman je nástroj primárně zaměřený na operační systém Linux, ovšem má i svou distribuci pro Windows. Ovšem k tomu aby mohl na Windows fungovat, tak každý kontejner musí obsahovat hostující systém Linux, na kterém jsou následně kontejnery spuštěny. \cite{podman_vs_docker}
-
-\subsubsection{Vagrant}
-
-Vagrant je nástroj, který se primárně zaměřuje na to, aby přinesl konzistentní vývojové prostředí na různé operační systémy. Jeho hlavní výhodou oproti Docker je jeho široká podpora operačních systému, které Docker nepodporuje. 
-
-Stejně jako Docker, i Vagrant má širokou podporu komunitních obrazů, ze kterých jsou následně vytvářeny tzv. \textit{boxy}, což je pouze jiný název pro kontejnery.\cite{vargrant_vs_docker}
-\customtodo{Rozšířit}
-
-V některých aspektech jsou ovšem ostatní možnosti lepší volbou. Jednou z nich je využití výpočetních zdrojů. Oproti Docker, který používá přímo zdroje hostujícího stroje, tak každá virtuální mašina vytvořená ve Vagrant spotřebuje specifický počet jáder, paměti RAM a paměti na disku. Zároveň čas změny konfigurace a sestavení virtuální mašiny je mnohem rychlejší na Docker, než ve Vagrant.\cite{madapparambath_2022}
-\question{Nechat Vagrant nebo ne, jelikož co koukám tak to kontejnerizaci nedělá? Hledat náhradu?}
 
 \subsection{Shrnutí}
 
