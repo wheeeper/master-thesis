@@ -1,0 +1,40 @@
+<mxfile host="Electron" modified="2023-04-10T14:38:29.165Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.1.2 Chrome/106.0.5249.199 Electron/21.4.3 Safari/537.36" etag="BMBh5Na-riCZzDPDeOFP" version="21.1.2" type="device">
+  <diagram name="Stránka-1" id="WNqY-9SNdNZhhfUiGQEl">
+    <mxGraphModel dx="1418" dy="820" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="BdlnnVyH9SRTPfFnCgFm-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;startArrow=classic;startFill=1;" parent="1" source="BdlnnVyH9SRTPfFnCgFm-1" target="BdlnnVyH9SRTPfFnCgFm-2" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="BdlnnVyH9SRTPfFnCgFm-1" value="Aplikace" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+          <mxGeometry x="370" y="220" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="BdlnnVyH9SRTPfFnCgFm-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=classic;startFill=1;" parent="1" source="BdlnnVyH9SRTPfFnCgFm-2" target="BdlnnVyH9SRTPfFnCgFm-3" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="BdlnnVyH9SRTPfFnCgFm-2" value="Knihovny" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="1" vertex="1">
+          <mxGeometry x="370" y="340" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="BdlnnVyH9SRTPfFnCgFm-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;startArrow=classic;startFill=1;" parent="1" source="BdlnnVyH9SRTPfFnCgFm-3" target="BdlnnVyH9SRTPfFnCgFm-4" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="BdlnnVyH9SRTPfFnCgFm-3" value="Operační&lt;br&gt;systém" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
+          <mxGeometry x="370" y="460" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="BdlnnVyH9SRTPfFnCgFm-4" value="Hardware" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+          <mxGeometry x="370" y="584.5" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="BdlnnVyH9SRTPfFnCgFm-9" value="API" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="455" y="300" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="BdlnnVyH9SRTPfFnCgFm-10" value="Systémová &lt;br&gt;volání" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="440" y="420" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="BdlnnVyH9SRTPfFnCgFm-11" value="ISA (HAL)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="440" y="540" width="90" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
