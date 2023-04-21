@@ -1,0 +1,116 @@
+\chapter{Analytická část}\label{chap:anal}
+
+V této kapitole se budu věnovat analýze aktuálního stavu testovací knihovny a možnostech jejího rozšíření.
+
+
+\section{Analýza stávajícího stavu knihovny}
+
+Původní testovací knihovna byla výstupem mojí bakalářské práce\cite{bakalarka} dokončené v roce 2021. Cílem této knihovny byla automatizace testů verifikace průmyslové komunikace a integrace do kontinuálního testování na Azure DevOps serveru. 
+
+Knihovna rozlišuje tři druhy účastníků testování:
+
+\begin{description}
+    \item[Testovací služba] Služba, která řídí testovací běh.
+    \item[Testované zařízení] Hlavní účastník testování, který běží na jiném zařízení, než ze kterého běží testovací služba. 
+    \item[Testovací partner] Zařízení, které simuluje nějaké testované zařízení. Toto zařízení běží na stejném zařízení, jako testovací služba. 
+\end{description}
+
+Ideou knihovny je, že testovací služba, která řídí a synchronizuje běh na všech zúčastněných zařízeních, je spouštěna automatizovaně za pomoci Azure DevOps serveru v Azure Pipelines. Společně s ním je spuštěn i vyvíjený produkt, který je hlavním cílem testování, v tomto kontextu nazýván jako testované zařízení. Testované zařízení se následně připojí k testovací službě a po úspěchu této fáze započne samotné testování. Implicitně knihovna tedy vyžaduje alespoň jedno nevirtualizované testované zařízení (v tomto smyslu zařízení nesmí být virtualizované testovací knihovnou). 
+
+Pro každý test lze definovat další účastníky testování - testovací partnery. Tito testovací partneři běží pouze po dobu daného testu a po dokončení testu zaniknou. Hlavní úlohou těchto zařízení je simulace protistrany při komunikaci. 
+
+Ukázka možného propojení všech účastníků testování je vidět na obrázku \ref{fig:bp_devicemodel}. Jak je vidět, testovací partneři a testovací služba běží na jednom zařízení, takzvaném agentovi, na kterém je primárně spouštěno celé testování. Vlevo dole je vidět testované zařízení, v tomto případě SIMATIC ET 200SP, které je propojeno s agentem. Vpravo dole můžeme vidět PLC, které pouze znázorňuje možnost propojení s dalšími externími zařízeními.
+
+\begin{figure}[htbp]
+    \centering 
+    \includegraphics[width=0.97\textwidth]{assets/img/bp_assets/devicemodel.pdf}
+    \caption{Ukázka možného propojení účastníků testování v původní knihovně}
+    \source{Převzato z \cite{bakalarka}}
+    \label{fig:bp_devicemodel}
+\end{figure}
+
+
+\subsection{Integrace do testovaného zařízení}
+
+K tomu aby mohla být knihovna použita na zařízení, které je testováno, je zapotřebí nejdříve implementovat rozhraní pro testované zařízení. Implementací rozhraní jsou definovány primárně všechny potřebné funkce pro vytvoření spojení mezi testovaným zařízením a testovací službou. Zároveň definujeme funkci pro získávání instancí jednotlivých testů. 
+
+Tyto testy rovněž dodržují jednotnou podobu pomocí rozhraní testu. Toto rozhraní definuje tři fáze testu:
+
+\begin{enumerate}
+    \item Příprava na testování -- definování potřebných struktur, inicializace.
+    \item Testování -- provedení samotného testu.
+    \item Úklid po testu -- uvolnění využitých zdrojů a uvedení zařízení do původního stavu.
+\end{enumerate}
+
+Všichni účastníci testu musí mít pro provedení daného testu obsahovat implementaci daného testu, definovanou rozhraním pro test, a musí být na základě obdržení identifikátoru testu schopni test instanciovat. To se provede registrací testu ve funkci \inlinecode{getTest}, která je definována rozhraním pro zařízení.
+
+Testovací služba následně synchronizuje všechny účastníky, tak aby před započetím další testovací fáze všechna zařízení dokončila fázi předchozí. 
+
+\subsection{Možnosti virtualizace v knihovně}
+
+Původní testovací knihovna definuje již předem zmíněné testovací partnery, kteří jsou virtualizovaní participanti testů, sloužící k simulaci protistrany při testování průmyslové komunikace s testovaným zařízením. Jejich implementace kopíruje implementaci pro testované zařízení. Výhodou je, že k jejich využití je potřeba implementovat pouze samotné rozhraní pro test.
+
+Každý testovací partner má životnost pouze v průběhu testu. To znamená, že před započetím testu je každý testovací partner vytvořen a připojen k testovací službě a následně po dokončení testu ukončen. Toto umožňuju variabilní počet testovacích partnerů pro každý testů.
+
+\subsection{Topologie zapojení účastníků testu}
+
+V případě verifikace průmyslové komunikace je samozřejmě podstatné, aby všichni účastníci testu byli schopni komunikovat mezi sebou dle potřeb daných testů. Aktuální knihovna ale toto nijak nekontroluje. 
+
+Jediný požadavek knihovny je, aby každý účastník testu byl připojen k testovací službě a odpovídal na její požadavky. Samotné testované zařízení se připojuje před započetím testování a do konce všech testů připojeno. Testovací partneři, jak už jsem zmínil, se připojují dle potřeby před započetím jednotlivých testů.
+
+Knihovna tedy nijak neřeší topologii zapojení jednotlivých zařízení. Je zde tedy předpoklad, že testovací partneři budou schopni komunikovat s ostatními účastníky testu díky tomu, že samotná testovací služba je schopna s nimi komunikovat. Zároveň, pokud by z nějakého důvodu komunikace nebyla možná, tak musí selhat samotné testy.
+
+\subsection{Souhrn}
+
+I když testovací knihovna přináší zjednodušení a zautomatizovaní testování průmyslové komunikace, stále je zde prostor pro zlepšení. Knihovna v aktuální podobě podporuje pouze limitovanou virtualizaci. Za pomoci knihovny jsme sice schopni simulovat protistranu, ale již ne samotné zařízení a to vždy musí běžet nezávisle na knihovně. 
+
+Aktuální nový požadavek na řešení topologie zapojení zařízení nesplňuje vůbec. Zároveň v již existujícím řešení limitující požadavek, že pro každý test musí každý účastník testu obsahovat implementaci testu. Toto nemusí být vždy potřeba, například při testování veřejného rozhraní.
+
+\section{Možnosti rozšíření virtualizačních prvků}
+
+Z analýzy stávajícího stavu knihovny je vidět, že možnost virtualizace prostřednictvím stávající knihovny jsou limitované. Knihovna nepodporuje možnost simulovat jakékoliv zařízení a vůbec neřeší topologii zapojení daných zařízení. Rozšířením knihovny tedy chceme docílit větší možnosti virtualizace a simulace reálného prostředí. Nová knihovna by tedy měla cílit na
+
+\begin{itemize}
+    \item možnost spustit jakékoliv zařízení jako virtualizované,
+    \item zapojit tato zařízení dle definované topologie (sériové linky, kruhu, hvězdy).
+\end{itemize}
+
+
+\subsection{Virtualizace zařízení}
+
+Při virtualizaci zařízení máme na výběr více možností jak virtualizovat. První možnost je vytvoření virtuální mašiny pro každé zařízení prostřednictvím hypervizoru. Tato možnost sice splňuje podmínku na to spustit každé zařízení jako virtualizované, ale pro toto použití je nevhodné. 
+
+Logickou možností je použití virtualizace skrz kontejnerizaci. Díky kontejnerizaci můžeme jednoduše spustit $n$ zařízení na jednom hardwaru. Pokud bychom měli virtuální mašiny pro $n$ zařízení, tak by zároveň muselo běžet $n$ operačních systémů, což snižuje efektivnost využití výpočetních zdrojů. Zároveň můžeme jednoduše a dynamicky vytvářet virtuální sítě, které budou splňovat požadovanou topologii. 
+
+Toto potvrzují studie, které zkoumaly rozdíl ve výkonu a efektivnosti využití výpočetních zdrojů mezi kontejnerizací prostřednictvím softwaru Docker a virtualizačního řešení KVM, který umožnuje jádru fungovat jako hypervizor. Při jejich porovnání bylo zjištěno, že díky nástroji Docker jsou virtuální zařízení schopna být spuštěna rychleji a využívají méně výpočetních zdrojů. V porovnání při počítání HPC(High performance counting) úkolů, bylo dosaženo díky nástroji Docker lepšího výkonu o 42\,\% při úkolech náročných na procesor a o 14,98\,\% lepšího výkonu při úkolech náročných na interní paměť.\cite{kvmdockercomp}\cite{2021virt} \note{Asi bude potřebovat ještě uhladit v závuslosti na teoretické časti atd.}
+
+
+\subsection{Porovnání kontejnerizačních řešení}
+
+V dnešní době existuje mnoho řešení, který využívají kontejnerizaci. V následující sekci porovnám vybraná řešení a zhodnotím jejich vhodnost použití v testovací knihovně. 
+
+K výběru je ale nejdříve potřeba nadefinovat úrovně správy, tedy oblasti, které můžou jednotlivé nástroje spravovat. Ty můžeme dle Aleksic\cite{docker_alt_23} rozdělit do čtyř kategorií:
+
+\begin{description}
+    \item[Image builders] Nástroje, které umožňují vytvářet kontejnery v souladu s pravidly dle OCI.
+    \item[Container managers] V širším smyslu tak můžeme nazvat všechny nástroje, které pomáhají se sestavováním a během kontejnerů. Specificky ale tak můžeme nazvat ty nástroje, které pomáhají spravovat jednotlivé instance kontejnerů.
+    \item[Container runtimes] Nástroje, které se starají o běh kontejnerů.
+    \item[Container engines] Nástroje, které se starají o všechny procesy spojené s  kontejnerizací.
+\end{description}
+
+K úspěšnému využití kontejnerizace je samozřejmě potřeba spravovat všechny procesy spojené s kontejnerizací. Mým cílem je tedy primárně použít k řešení kontejnerizace tzv. \textit{container engines}. Jejich přímým využitím, oproti využití několika nástrojů, které by dohromady tvořili container engine, doufám předejití problémům s kompatibilitou a integrací těchto nástrojů dohromady.
+
+Hlavním požadavkem na dané řešení je, aby podporovalo operační systém Windows. Tento požadavek primárně vyvstává z infrastruktury firmy Siemens. Vybranými řešeními tedy jsou
+
+\begin{itemize}
+    \item Docker,
+    \item Podman,
+    \item Vagrant. 
+\end{itemize}
+
+
+\subsection{Shrnutí}
+
+Při pohledu na vytvořenou analýzu je vidět, že Vagrant vyšel z této analýzy na poslední příčce. Díky rozdílnému primárnímu zaměření pokulhává v několika kategoriích, především v efektivitě využití výpočetních zdrojů. Zároveň za tuto velkou cenu nepřináší žádné výhody oproti ostatním nástrojům.
+
+Docker a Podman jsou velice podobné nástroje a ve spoustě případů je každý z nich dobrou volbou. Pro použití v testovací knihovně ovšem vyhrává Docker. Hlavním důvodem je jeho nativní podpora platformy Windows. Další velkou výhodou je jeho široká rozšířenost, což vede k velice aktivní komunitě vývojářů, jejichž knihovny a návody velice usnadňují jeho integraci. 

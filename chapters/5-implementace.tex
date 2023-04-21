@@ -26,7 +26,7 @@ Testovací knihovna k úspěšnému vytvoření potřebuje primárně umět tyto
 
 \begin{enumerate}
     \item Umět komunikovat se softwarem Docker.
-    \item Vytvořit kontejnery, tedy virtualizované zařízení, dle konfigurace.
+    \item Vytvořit kontejnery, tedy virtualizovaná zařízení, dle konfigurace.
     \item Propojit všechna zařízení mezi sebou taktéž dle konfigurace.
 \end{enumerate}
 
@@ -92,7 +92,7 @@ Metoda \inlinecode{Build} následně zpracovává všechna zařízení ve front�
 
 Vytvoření samotného kontejneru je následně provedeno metodou \inlinecode{CreateContainer}. Ta dostane jako argument název zařízení, název obrazu, instanci nastavení zařízení a instanci nastavení sítě zařízení. 
 
-Každá kontejner je definovaný za pomoci rozraní \inlinecode{IVMContainer}, definovaného v sekci \label{sec:cont_design}. Pomocí jeho metod je každý kontejner nastavován a realizace těchto nastavení je poté na dané implementaci rozhraní. V aktuální implementaci existují tyto dvě implementace kontejnerů: 
+Každá kontejner je definovaný za pomoci rozraní \inlinecode{IVMContainer}, definovaného v sekci \ref{sec:cont_design}. Pomocí jeho metod je každý kontejner nastavován a realizace těchto nastavení je poté na dané implementaci rozhraní. V aktuální implementaci existují tyto dvě implementace kontejnerů: 
 
 \begin{itemize}
     \item \inlinecode{DefaultContainer} - základní kontejner vycházející z operačního systému Ubuntu. Reprezentován je enumerátorem \inlinecode{ContainerType.DEFAULT} 
@@ -107,7 +107,7 @@ Metoda \inlinecode{CreateContainer} následně vrátí instanci kontejneru, kter
 
 \subsection{Správce celého virtualizovaného prostředí}
 
-Předchozí zmíněné správce je potřebo orchestrovat společně. K tomuto slouží třída \inlinecode{VirtualEnvironmentManager}. Třída obdrží instanci \inlinecode{EnvironmentConfiguration}, která reprezentuje nastavení virtualizovaného prostředí definovaného v sekci \ref{sec:design_virt}. Následně také obdrží instanci třídy \inlinecode{ServiceConfiguration}, ve které je obsaženo nastavení testovací služby.
+Předchozí zmíněné správce je potřeba orchestrovat společně. K tomuto slouží třída \inlinecode{VirtualEnvironmentManager}. Třída obdrží instanci \inlinecode{EnvironmentConfiguration}, která reprezentuje nastavení virtualizovaného prostředí definovaného v sekci \ref{sec:env_conf}. Následně také obdrží instanci třídy \inlinecode{ServiceConfiguration}, ve které je obsaženo nastavení testovací služby.
 
 Třída v sobě obsahuje instance obou dvou správců \inlinecode{NetworkManager} a \inlinecode{ContainerManager}. V konstruktoru je zavolána metoda \inlinecode{SetupEnvironment}, která zaregistruje všechny zařízení a připojení mezi nimi. Zároveň, pokud dle nastavení je potřeba zachytávat na daném spojení komunikaci, tak také přidá adekvátně dané odposlouchávače komunikace. 
 
@@ -119,17 +119,17 @@ Za pomoci metody \inlinecode{Stop} je poté následně možné zastavit všechny
 
 Implementace virtualizovaného prostředí ošetřuje všechny chyby tím, že v případě jejich vzniku vyhodí odpovídající výjimku. Je tedy potřeba následně tyto chyby v případě jejich vzniku zachytávat a adekvátně vyhodnotit.
 
-Ovšem, pokud je program násilně ukončen, tak může dojít k nesmazaní daných vytvořených prostředků v Docker prostředí. To může způsobit jejich akumulaci a v případě sítě dokonce selhání vytvoření sítě. Testovací knihovna proto definuje ve statické třídě \inlinecode{TestLibConstants} proměnnou \inlinecode{ResourcePrefix}, který je přidán ke všem vytvořeným prostředkům.
+Ovšem pokud je program násilně ukončen, tak může dojít k nesmazaní daných vytvořených prostředků v Docker prostředí. To může způsobit jejich akumulaci a v případě sítě dokonce selhání vytvoření sítě. Testovací knihovna proto definuje ve statické třídě \inlinecode{TestLibConstants} proměnnou \inlinecode{ResourcePrefix}, který je přidán ke všem vytvořeným prostředkům.
 
 Díky tomu může knihovna identifikovat jím vytvořené prostředky. Každý správce má tedy implementovanou metodu pro odstranění zbylých prostředků. Ty jsou volány prostřednictvím metody \inlinecode{RemoveHangingResources} v konstruktoru správce virtualizovaného prostředí před započetím všech akcí k vytvoření nového prostředí.
 
 \subsection{Definice kontejnerů}
 
-Jak jsem již řekl v sekci \ref{sec:cont_managment}, tak aktuálně testovací knihovna definuje dvě zařízení. Zařízení typu \inlinecode{default} je výchozím zařízením pro všechny aktuální kontejnery. Zařízení vychází z operačního systému Ubuntu 22.04\customtodo{citovat}. 
+Jak jsem zmínil v sekci \ref{sec:cont_managment}, aktuálně testovací knihovna definuje dvě zařízení. Zařízení typu \inlinecode{default} je výchozím zařízením pro všechny aktuální kontejnery. Zařízení vychází z operačního systému Ubuntu 22.04\customtodo{citovat}. 
 
-K správné orchestraci zařízení potřebuje kontejnerizované zařízení obsahovat potřebné nástroje k nastavení sítě. Všechny tyto nástroje jsou definované v novém obraze názvaném \inlinecode{testlib-ubuntu-base}. Tím pádem všechny kontejnery, které budou vycházet z tohoto obrazu, bude možné použít v testovací knihovně. 
+Ke správné orchestraci zařízení potřebuje kontejnerizované zařízení obsahovat potřebné nástroje k nastavení sítě. Všechny tyto nástroje jsou definované v novém obraze názvaném \inlinecode{testlib-ubuntu-base}. Tím pádem všechny kontejnery, které budou vycházet z tohoto obrazu, bude možné použít v testovací knihovně. 
 
-Tento obraz následně může být distribuován, ať už do veřejného, nebo soukromého repositáře. Označení verze obrazu bude kopírovat označení podkladového obrazu operačního systému Ubuntu. Tedy, verze bude stejná, jako verze operačního systému Ubuntu. 
+Tento obraz následně může být distribuován, ať už do veřejného, nebo soukromého repositáře. Označení verze obrazu bude kopírovat označení podkladového obrazu operačního systému Ubuntu. Tedy verze bude stejná jako verze operačního systému Ubuntu. 
 
 \subsection{Odposlouchávání komunikace}
 
