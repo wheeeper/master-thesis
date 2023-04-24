@@ -23,9 +23,9 @@ Představu nové architektury je možné vidět na obrázku \ref{fig:architectur
     \label{fig:architecture}
 \end{figure}
 
-Na obrázku lze vidět tři druhy zařízení, která jsou barevně oddělená. Zeleně označeným zařízením je původní \textit{testovací služba}. Ta řídí testovací běh a vyhodnocuje výsledky testů. Testovací služba běží přímo v operačním systému agenta, tedy bez žádné virtualizace. Uvnitř modře označeného nového virtualizovaného prostředí lze následně vidět jednu z možných simulovaných topologií, v tomto případě topologii hvězdy. 
+Na obrázku lze vidět tři druhy zařízení, která jsou barevně oddělená. Zeleně označeným zařízením je původní \textit{testovací služba}. Ta řídí testovací běh a vyhodnocuje výsledky testů. Testovací služba běží přímo v operačním systému agenta, tedy bez žádné virtualizace. 
 
-Každý objekt uvnitř virtualizovaného prostředí představuje právě jedno zařízení, které je kontejnerizováno. Všechna oranžově označená virtualizovaná zařízení představují účastníky testu, tedy zařízení, které nějak přispívají k provedení daného testu. \textit{Testované zařízení} představuje vyvíjený produkt, který chceme testovat. Ostatní oranžová zařízení představují \textit{testovací partnery}. Ti přispívají k vytvoření prostředí testu a k orchestraci testu.
+Uvnitř modře označeného nového virtualizovaného prostředí lze následně vidět jednu z možných simulovaných topologií, v tomto případě topologii hvězdy. Každý objekt uvnitř virtualizovaného prostředí představuje právě jedno zařízení, které je kontejnerizováno. Všechna oranžově označená virtualizovaná zařízení představují účastníky testu, tedy zařízení, které nějak přispívají k provedení daného testu. \textit{Testované zařízení} představuje vyvíjený produkt, který chceme testovat. Ostatní oranžová zařízení představují \textit{testovací partnery}. Ti přispívají k vytvoření prostředí testu a k orchestraci testu.
 
 Rozdílem od stávající knihovny je, že ne všichni účastníci testu musí být k testovací službě připojeni. Na obrázku lze vidět, že v tomto případě pouze testovací partner 1 a 4 jsou připojeni k testovací službě. Je zde ale předpoklad, že alespoň jedno zařízení musí být k testovací službě připojeno.
 
@@ -35,7 +35,7 @@ Novým typem zařízení je červeně označený \textit{odposlouchávač komuni
 
 Důležitou součástí testovací knihovny bude implementace orchestrace virtualizovaného prostředí. To znamená, že testovací služba bude schopna vytvářet jednotlivá virtuální zařízení, které následně automaticky propojí dle požadované topologie a po konci testování daná zařízení ukončí. 
 
-Knihovna bude obsahovat tzv. \textit{správce virtualizovaného prostředí}. Ten se bude starat o všechny úkony spojené s vytvářením a chodem virtualizovaného prostředí. Tedy tento správce vytvoří potřebné kontejnery a síť. Následně taktéž všechny zařízení propojí dle konfigurace. 
+Knihovna bude obsahovat tzv. \textit{správce virtualizovaného prostředí}. Ten se bude starat o všechny úkony spojené s vytvářením a chodem virtualizovaného prostředí. Tedy tento správce bude vytvářet potřebné kontejnery a sítě, s pomocí niž propojí všechna zařízení dle konfigurace. 
 
 \subsection{Nastavení virtualizovaného prostředí}\label{sec:env_conf}
 
@@ -83,6 +83,8 @@ Testovací knihovna bude pro definici kontejnerizovaného zařízení obsahovat 
     \item \inlinecode{Start()} - spustí daný kontejner. Metoda vrací boolean hodnotu o správnosti spuštění kontejneru.
     \item \inlinecode{Stop()} - zastaví daný kontejner.
     \item \inlinecode{Dispose()} - zničí všechny alokované prostředky, včetně vytvořeného kontejneru v Docker.
+    \item \inlinecode{GetLog()} - získá z kontejneru všechny zápisy, které byly v něm vypsány
+    \item \inlinecode{IsRunning} - vlastnost, která značí, zda daný kontejner je spuštěn
 \end{itemize}
 
 Správce virtualizovaného prostředí následně bude schopen nastavit daná zařízení dle implementace předem definovaného rozhraní. Druh implementace bude určen položkou \inlinecode{type} v konfiguraci zařízení. Každá implementace daného rozhraní musí zajistit správné nastavení všech konfiguračních položek definovaných rozhraním kontejnerizovaného zařízení.
@@ -100,7 +102,7 @@ Veškerá komunikace mezi zařízeními bude probíhat uvnitř virtualizovaného
 
 Testovací knihovna pro každé zařízení nastaví seznam interních domén, skrz které bude možné adresovat účastníky testu. Tyto domény budou ve tvaru \inlinecode{[jméno-zařízení].internal}. Validními znaky pro domény budou pouze písmena, čísla a pomlčka. Jméno zařízení tedy bude transformováno tak, aby obsahovalo pouze tyto znaky. Všechny nepodporované znaky budou z jména zařízení odstraněny. Výjimkou je pouze znak \inlinecode{'\_'}, který bude nahrazen pomlčkou. V případě kolize dvou jmen po transformaci bude do jména domény přidán index. 
 
-Ukázku přiřazení domén můžeme vidět na obrázku \ref{fig:domain_resolving}. Jak je vidět, topologie je totožná s ukázkovou topologií na obrázku \ref{fig:architecture}, pouze ke všem zařízením uvnitř virtuálního prostředí bylo přiřazeno unikátní jméno. Každé zařízení má přiřazenou doménu dle daného formátu. Výjimkou je pouze testovací služba, která je mimo virtualizované prostředí. Software Docker automaticky definuje doménu \inlinecode{host.docker.internal}, s pomocí které je možné adresovat hostující stroj.
+Ukázku přiřazení domén můžeme vidět na obrázku \ref{fig:domain_resolving}. Jak je vidět, topologie je totožná s ukázkovou topologií na obrázku \ref{fig:architecture}, pouze ke všem zařízením uvnitř virtuálního prostředí bylo přiřazeno unikátní jméno. Každé zařízení má přiřazenou doménu dle daného formátu. Výjimkou je pouze testovací služba, která je mimo virtualizované prostředí. Software Docker automaticky definuje doménu \inlinecode{host.docker.internal}, s pomocí které je možné adresovat hostující stroj a tím pádem i testovací službu.
 
 \begin{figure}[htbp]
     \centering 
@@ -138,7 +140,7 @@ Fungování testovací služby lze vidět na novém diagramu aktivit testovací 
 
 Po sestavení virtualizovaného prostředí testovací služba započne inicializační fázi, ve které se všechna zařízení ovládaná testovací službou připojí k testovací službě. Tedy mimo přímých účastníků testu se v této fázi připojí i všichni odposlouchávači komunikace, pokud nějací existují. 
 
-Testovací služba sama o sobě nemá ponětí o tom, které testy budou spuštěny a které ne, ale pouze zpracovává požadavky, které na ni přichází. Tedy po obdržení požadavku na spuštění testu testovací služba spouští všechny fáze testu. Při ukončení testovací služba odesílá všem připojeným účastníkům zprávu o ukončení testování, čímž mohou být připojená zařízení taktéž ukončena. O úspěšné ukončení se ovšem stará správce virtualizovaného prostředí.
+Testovací služba sama o sobě nemá ponětí o tom, které testy budou spuštěny a které ne. Testovací služba skrz definované API definuje metodu, skrz kterou je možné spustit test dle identifikátoru. Testovací služba následně spouští všechny fáze testu. Nakonec služba při ukončení odesílá všem připojeným účastníkům zprávu o ukončení testování, čímž mohou být připojená zařízení taktéž ukončena. O úspěšné ukončení všech zařízení se ovšem stará správce virtualizovaného prostředí.
 
 
 \section{Testování}
