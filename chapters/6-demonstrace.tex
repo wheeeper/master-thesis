@@ -1,0 +1,91 @@
+\chapter{Demonstrace použití knihovny}
+
+Tato kapitola popisuje ukázku použití nově vytvořené testovací knihovny.
+
+
+\section{Definice testu}
+
+Hlavní výhodou nové testovací knihovny je její flexibilita ve vytváření jednotlivých topologií ve virtualizovaném prostředí. Cílem tedy bylo navrhnout test, který by byl lehce škálovatelný a použitelný na všechny topologie. 
+
+Nejdříve ovšem pro komunikaci byl zvolen průmyslový protokol ModbusTCP. \customtodo{citovat modbus} Všechna komunikace mezi zařízeními tedy probíhat dle jeho specifikace. K úspěšné komunikaci tedy bude potřeba právě jeden server a alespoň jeden klient, který bude se serverem komunikovat. Test poté bude probíhat následovně:
+
+\begin{enumerate}
+    \item Uvnitř testovacího prostředí bude běžet server, který bude přijímat komunikaci
+    \item Klient přečte hodnotu registru, který je nazýván jako tzv. \textit{coil}, je na adrese 0 a má velikost právě jeden bit. Pokud je jeho hodnota rovna 0, poté pokusí se změnit jeho hodnotu na hodnotu 1. V případě neúspěchu je tento krok opakován.
+    \item Klient přečte první čtyři tzv. \textit{holding} registry, které mají adresu 0-3. 
+    \item Klient inkrementuje získanou hodnotu registrů. Pokud hodnota inkrementací překročí maximální povolenou hodnotu v registrech, je registr nastaven na hodnotu 0.
+    \item Klient zapíše nové hodnoty zpátky do daných registrů.
+    \item Klient znovu přečte hodnotu z daných registrů a zkontroluje, zda byly nové hodnoty správně zapsány.
+    \item Klient nastaví registr, který nastavil v druhém kroku zpátky na hodnotu 0.
+\end{enumerate}
+
+Tento test je jednoduše škálovatelný na libovolný počet klientů. Každý klient bude provádět kroky 2 až 7. Je ale ovšem potřeba zajistit exkluzivní přístup k daným registrům, tedy pouze jeden klient může v danou chvíli manipulovat s danými holding registry. 
+
+K tomuto slouží krok 2 a 7, kdy coil registr na adrese 0 slouží jako zámek. Pokud je tento registr úspěšně nastaven na hodnotu 1, tak poté pouze tento klient co tuto hodnotu nastavil může zapisovat do daných registrů. V opačném případě bude požadavek na zápis odmítnut.
+
+\section{Implementace testu}
+
+Implementace testu vyžaduje implementaci dvou zařízení - serveru a klienta. Jazykem implementace pro obě zařízení byl zvolen jazyk Python. Obě zařízení budou pro komunikaci využívat knihovnu pyModbusTCP.\customtodo{citovat} Tato knihovna obsahuje implementaci námi požadovaného průmyslového protokolu ModbusTCP a to jak pro server, tak pro klienta.
+
+\subsection{Server}
+
+Na straně serveru je potřeba zajistit exkluzivní přístup pro jednotlivé klienty, tedy aby pouze jeden klient mohl manipulovat s registry. Knihovna pyModbusTCP definuje tyto tři třídy:
+
+\begin{itemize}
+    \item \inlinecode{ModbusServer} - logika serveru
+    \item \inlinecode{DataBank} - třída, která uchovává data registrů a zajištuje bezpečný přístup k nim
+    \item \inlinecode{DataHandler} - třída, která mapuje volání serveru na na metody třídy DataBank
+\end{itemize}
+
+Knihovna přímo podporuje použití vlastní implementace tříd \inlinecode{DataBank} a \inlinecode{DataHandler}. Třída \inlinecode{DataHandler} obsahuje pro zápis tyto dvě funkce:
+
+\begin{itemize}
+    \item \inlinecode{write\_coils} - zápis do coil registrů 
+    \item \inlinecode{write\_h\_regs} - zápis do holding registrů
+\end{itemize}
+
+Do obou těchto funkcí byla přidána kontrola, že daný klient má povolení zapisovat. Ta je kontrolována za pomoci IP adresy. Funkce \inlinecode{write\_coils} ovšem dovoluje zapisovat i v případě, že registr na adrese 0 má hodnotu 0. Pokud je hodnota tohoto registru nastavena na 1, tak poté je uložena IP adresa zařízení, který danou změnu provedl. Symetricky, pokud je hodnota téhož registru nastavena na hodnotu nula, tak poté je IP adresa smazána a je povolen zápis do coil registru dalšímu klientovi. Funkce zároveň obsahuje zámek, pro zajištění exkluzivního přístupu při zamykání a odemykání. 
+
+Logika třídy \inlinecode{DataBank} byla nepozměněna. Jedinou změnou byla implementace metod \inlinecode{on\_coils\_change} a \inlinecode{on\_holding\_registers\_change}, za jejichž pomoci je vypsána každá změna v příslušných registrech. 
+
+\subsection{Klient}
+
+Pro orchestraci musí být klient připojen k testovací službě. K tomu bude využita python implementace testovací knihovny, která obsahuje vše potřebné k vytvoření spojení a řízením zařízení na základě instrukcí od testovací služby. 
+
+K umožnění testování je potřeba provést tyto věci:
+
+\begin{enumerate}
+    \item Definovat výčtový typ, který bude definovat test. Jeho číselná hodnota musí být stejná jak na zařízení, tak v testovacím projektu, kde poběží testovací knihovna.
+    \item Implementovat testovací případ, jenž bude vycházet z abstraktní třídy \inlinecode{TestCase}.
+    \item Vytvořit funkci, která po obdržení identifikátoru testu v argumentu funkce navrátí instanci testu, který daný identifikátor reprezentuje.
+\end{enumerate}
+
+
+V implementaci klienta výčtovým typem, který definuje testy, je třída \inlinecode{TestList}. Následně třída \inlinecode{TestModbusRead} definuje daný testovací případ. V neposlední řadě funkce \inlinecode{get\_test(int)} převádí identifikátor na instanci testovacího případu. 
+
+Do souboru \inlinecode{main.py}, kterým je hlavním zdrojovým souborem programu, bylo také přidáno získání přepínačů programu, jenž jsou získány prostřednictvím knihovny \inlinecode{argparse}. Program má tyto dva přepínače:
+
+\begin{itemize}
+    \item \inlinecode{-s}, \inlinecode{--service} - IP adresa nebo doména testovací služby
+    \item \inlinecode{-p}, \inlinecode{--port} - port testovací služby
+\end{itemize}
+
+Program díky těmto přepínačům obdrží informace o tom, kde běží testovací služba, na kterou se při jejím spuštění připojí. Spuštění \inlinecode{TestRunner}, třídy která se stará o běh zařízení, pak můžeme vidět na výpisu \ref{listing:server_main}. Jako první je běh inicializována za pomoci funkce \inlinecode{init}, za pomoci niž proběhne inicializační fáze připojení se k testovací službě. 
+
+Následně je zavolána funkce \inlinecode{handle\_instructions}, která čeká na instrukce od testovací služby. Z metody je poté navráceno po obdržení zprávy o ukončení testování, načež je ukončen celý program. 
+
+
+\begin{listing}[p]
+    \centering
+    \begin{minted}[breaklines,autogobble]{python}
+    args = args.parse_args()
+    testrunner = TestRunner(get_test)
+    testrunner.init(args.service, args.port)
+    testrunner.handle_instructions()
+    \end{minted}
+\caption{Spuštění řízení testovaného zařízení}
+\label{listing:server_main}
+\end{listing}
+
+
+\inlinecode{Definice docker kontejneru}
