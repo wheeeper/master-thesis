@@ -177,7 +177,9 @@ Ke správné orchestraci zařízení potřebuje kontejnerizované zařízení ob
     \item \inlinecode{iproute2}
 \end{itemize}
 
-Všechny kontejnery, které budou vycházet z tohoto obrazu, bude možné použít v testovací knihovně. Tento obraz následně může být distribuován, ať už do veřejného, nebo soukromého repositáře. Označení verze obrazu bude kopírovat označení podkladového obrazu operačního systému Ubuntu. Tedy verze bude stejná jako verze operačního systému Ubuntu. 
+Všechny kontejnery, které budou vycházet z tohoto obrazu, bude možné použít v testovací knihovně. Tento obraz byl zveřejněn ve veřejném repositáři na Docker Hub\cite{docker_hub}, kde je dostupný pod názvem \inlinecode{wheeeper/testlib-ubuntu-base}.
+
+Označení verze obrazu bude kopírovat označení podkladového obrazu operačního systému Ubuntu. Tedy verze bude stejná jako verze operačního systému Ubuntu. 
 
 Následná definice kontejnerů v konfiguračním souboru virtualizovaného prostředí bude probíhat dle definice v \ref{sec:env_conf}. Je ovšem potřeba zajistit, že všechny cesty v konfiguraci budou pro program dostupné, či validní. V případě relativních cest uvnitř konfiguračního souboru bude knihovna pokládat umístění konfiguračního souboru jako výchozí bod pro dané relativní cesty.
 
@@ -221,7 +223,7 @@ Program má definovaný Dockerfile, vycházející z definovaného obrazu \inlin
     \item \inlinecode{libpcap-dev} - knihovna k zaznamenávání packetů 
 \end{itemize}
 
-Obraz také využívá obraz \inlinecode{mcr.microsoft.com/dotnet/sdk:6.0}, s pomocí než je celý program zkompilován. Daný obraz, který obsahuje odposlouchávač komunikace, lze následně distribuovat do repositáře, ať už veřejného, či soukromého. V základním nastavení je program spuštěn v módu bez připojení k testovací službě. To lze při vytváření kontejneru změnit a tedy program správně nastavit. 
+Obraz také využívá obraz \inlinecode{mcr.microsoft.com/dotnet/sdk:6.0}, s pomocí než je celý program zkompilován. V základním nastavení je program spuštěn v módu bez připojení k testovací službě. To lze při vytváření kontejneru změnit a tedy program správně nastavit. Daný vytvořený obraz byl zveřejněn ve veřejném repositáři na Docker Hub\cite{docker_hub} a je dostupný pod názvem \inlinecode{wheeeper/networklogger}.
 
 \section{Integrace virtualizovaného prostředí do testovací knihovny}
 

@@ -26,7 +26,7 @@ K tomuto slouží krok 2 a 7, kdy coil registr na adrese 0 slouží jako zámek.
 \section{Implementace testu}
 
 Implementace testu vyžaduje implementaci dvou zařízení - serveru a klienta. Jazykem implementace pro obě zařízení byl zvolen jazyk Python. Obě zařízení budou pro komunikaci využívat knihovnu pyModbusTCP.\customtodo{citovat} Tato knihovna obsahuje implementaci námi požadovaného průmyslového protokolu ModbusTCP a to jak pro server, tak pro klienta.
-
+ 
 \subsection{Server}
 
 Na straně serveru je potřeba zajistit exkluzivní přístup pro jednotlivé klienty, tedy aby pouze jeden klient mohl manipulovat s registry. Knihovna pyModbusTCP definuje tyto tři třídy:
@@ -75,7 +75,7 @@ Program díky těmto přepínačům obdrží informace o tom, kde běží testov
 Následně je zavolána funkce \inlinecode{handle\_instructions}, která čeká na instrukce od testovací služby. Z metody je poté navráceno po obdržení zprávy o ukončení testování, načež je ukončen celý program. 
 
 
-\begin{listing}[p]
+\begin{listing}[htbp]
     \centering
     \begin{minted}[breaklines,autogobble]{python}
     args = args.parse_args()
@@ -88,4 +88,21 @@ Následně je zavolána funkce \inlinecode{handle\_instructions}, která čeká 
 \end{listing}
 
 
-\inlinecode{Definice docker kontejneru}
+\subsection{Definice docker kontejnerů}
+
+Díky podobné struktuře obou programů jsou všechny kontejnery skoro identické, až na možnou změnu v kopírování zdrojových souborů. Kontejnery vychází z předem definovaného obrazu \inlinecode{testlib-ubuntu-base}. Tento obraz je následně rozšířen o tyto balíčky:
+
+\begin{itemize}
+    \item \inlinecode{python-3.10}
+    \item \inlinecode{python-3.10-venv}
+\end{itemize}
+
+Tyto balíčky jsou nutnou součástí kontejneru a slouží ke spuštění dříve definovaných Python programů. Následně je vytvořena složka \inlinecode{app}, do které jsou nakopírovány všechny zdrojové soubory programu. Spolu s ní je vytvořena složka \inlinecode{packages}, do které jsou nakopírovány všechny balíčky ze stejnojmenné složky v kořenové složce programu. Tato složka slouží pro balíčky, které nebyly uveřejněny a tedy nejsou dostupné z veřejného repositáře.
+
+Po nakopírování všech souborů je vytvořeno virtuální Python prostředí. Za pomocí něj jsou poté nainstalovány všechny lokální balíčky ve složce packages, pokud nějaké existují. Poté jsou nainstalovány všechny balíčky obsažené v souboru \inlinecode{requirements.txt}. Ten obsahuje seznam všech potřebných balíčků ke spuštění programu, včetně těch, co nejsou veřejně dostupné. Pokud je možné program spustit bez argumentů, tak je do kontejneru i přidán příkaz na spuštění aplikace. Při použití v knihovně ovšem bude toto spuštění změněno. 
+
+\section{Testovací projekt}
+
+K tomu aby mohla být spuštěna testovací knihovna, tak je potřeba vytvořit testovací projekt. Tento projekt musí obsahovat vytvořenou testovací knihovnu a také testovací knihovny MSTest. Projekt je možné vytvořit ze šablon, jenž jsou poskytnuty IDE Visual Studio 2022\cite{vs2022}. K vytvoření projektu byla použita šablona s názvem \textit{MSTest Test Project}. 
+
+\customtodo{Dopsat}
