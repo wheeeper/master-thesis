@@ -3,7 +3,38 @@
 Tato kapitola popisuje ukázku použití nově vytvořené testovací knihovny.
 
 
-\section{Definice testu}
+\section{Predispozice ke spuštění testovací knihovny}\label{sec:test_requirements}
+
+K tomu aby mohla být testovací knihovna spuštěna, tak musí stroj mít nainstalované tyto položky:
+
+\begin{itemize}
+    \item Visual Studio 2022
+    \item .NET 6
+    \item Docker Desktop
+\end{itemize}
+
+Zároveň pro Docker Daemon, který je součástí Docker Desktop, musí být nastaveny rozmezí IP adres, v kterých lze vytvářet sítě. Toto lze upravit v Docker Desktop v nastavení pod kolonkou \inlinecode{Docker Engine}. Možnou ukázku dodatečného nastavení můžeme vidět na výpisu \ref{listing:docker_conf}. 
+
+\begin{listing}[htbp]
+    \centering
+    \begin{cminted}[breaklines,autogobble]{json}
+        "default-address-pools": [
+            {
+              "base": "172.17.0.0/12",
+              "size": 20
+            },
+            {
+              "base": "192.168.0.0/16",
+              "size": 24
+            }
+          ]
+    \end{cminted}
+\caption{Nastavení rozmezí IP adres pro Docker}
+\label{listing:docker_conf}
+\end{listing}
+
+
+\section{Definice testu}\label{sec:modbus_test}
 
 Hlavní výhodou nové testovací knihovny je její flexibilita ve vytváření jednotlivých topologií ve virtualizovaném prostředí. Cílem tedy bylo navrhnout test, který by byl lehce škálovatelný a použitelný na všechny topologie. 
 
@@ -101,8 +132,254 @@ Tyto balíčky jsou nutnou součástí kontejneru a slouží ke spuštění dř�
 
 Po nakopírování všech souborů je vytvořeno virtuální Python prostředí. Za pomocí něj jsou poté nainstalovány všechny lokální balíčky ve složce packages, pokud nějaké existují. Poté jsou nainstalovány všechny balíčky obsažené v souboru \inlinecode{requirements.txt}. Ten obsahuje seznam všech potřebných balíčků ke spuštění programu, včetně těch, co nejsou veřejně dostupné. Pokud je možné program spustit bez argumentů, tak je do kontejneru i přidán příkaz na spuštění aplikace. Při použití v knihovně ovšem bude toto spuštění změněno. 
 
+\subsection{Definice virtualizovaného prostředí}
+
+Ke spuštění zařízení ve virtualizovaném prostředí je potřeba definovat nastavení virtualizovaného prostředí, jenž byl popsán v sekci \ref{sec:env_conf}. K testování na všech třech požadovaných topologiích budou potřeba minimálně tři konfigurace, které ovšem budou v hodně částech podobné. První položkou v konfiguraci je označení virtualizovaného prostředí. Ty dle topologie budou:
+
+\begin{itemize}
+    \item \inlinecode{modbus\_line} - konfigurace s topologií sériové linky
+    \item \inlinecode{modbus\_star} - konfigurace s topologií hvězdy
+    \item \inlinecode{modbus\_circle} - konfigurace s topologií kruhu
+\end{itemize}
+
+Poté následuje konfigurace počtu očekávaných zařízení. Každá konfigurace bude obsahovat 1 server a 6 klientů. K testovací službě budou připojeni pouze klienti, tedy testovací služba bude očekávat 6 zařízení. Ukázku konfigurace obou položek můžeme vidět na výpisu \ref{listing:conf_devices}
+
+Další položkou v konfiguraci jsou jednotlivá zařízení. Definici jednotlivých zařízení můžeme vidět na výpisu \ref{listing:conf_devices}. Virtualizované prostředí obsahuje dle definice dva typy zařízení - server a klienty. Server je definován pod názvem \inlinecode{modbus\_server}, je typu \inlinecode{default} a je definován v \inlinecode{..\textbackslash server\textbackslash Dockerfile}. V kolonce \inlinecode{commands} pak můžeme vidět příkaz na spuštění zařízení. Server má také nastaven kolonku \inlinecode{logging} na hodnotu \inlinecode{true}, čímž bude zaručeno zaznamenávání komunikace mezi serverem a klienty.
+
+Následně lze vidět definice klientů. Ty jsou pojmenování pod názvem \inlinecode{modbus\_client\_[1-6]}. Každá definice klient je totožná a liší se pouze v názvu zařízení. Klient je definován v \inlinecode{..\textbackslash client\textbackslash Dockerfile} a je taktéž typu default. V kolonce \inlinecode{commands} pak lze vidět příkaz na spuštění zařízení, kde v přepínačích jsou předány parametry pro připojení se k testovací službě.
+
+
+\begin{listing}[htbp]
+    \centering
+    \begin{minted}[breaklines,autogobble, fontsize=\footnotesize]{yaml}
+        label: modbus_(line|star|circle)
+        service:
+          connections: 6
+        containers:
+            modbus_server:
+              build: 
+                  dockerfile: ..\server\Dockerfile
+              type: default
+              commands:
+                - "/opt/venv/bin/python /app/main.py"
+              logging: true
+            modbus_client_1:
+              build: 
+                  dockerfile: ..\client\Dockerfile
+              type: default
+              commands:
+                - "/opt/venv/bin/python /app/main.py -s host.docker.internal -p 1337"
+                .
+                .
+                .
+            modbus_client_6:
+              build: 
+                  dockerfile: ..\client\Dockerfile
+              type: default
+              commands:
+                - "/opt/venv/bin/python /app/main.py -s host.docker.internal -p 1337"
+    \end{minted}
+\caption{Nastavení zařízení v konfiguraci virtualizovaného prostředí}
+\label{listing:conf_devices}
+\end{listing}
+
+V neposlední řadě je potřeba nadefinovat kolonku \inlinecode{links}, která definuje propojení mezi zařízeními. Definice pro všechny topologie můžeme vidět na výpisu \ref{listing:conf_links}. Jak je vidět, definice je jednoduché, intuitivní a každá položka v seznamu definuje právě jedno spojení.
+
+\begin{listing}[htbp]
+    \centering
+    \begin{cminted}[breaklines,autogobble, fontsize=\footnotesize]{yaml}
+# Definice topologie seriové linky
+links:
+- "modbus_server:modbus_client_1"    
+- "modbus_client_1:modbus_client_2"    
+- "modbus_client_2:modbus_client_3"    
+- "modbus_client_3:modbus_client_4"    
+- "modbus_client_4:modbus_client_5"    
+- "modbus_client_5:modbus_client_6"
+
+# Definice topologie hvězdy
+links:
+- "modbus_server:modbus_client_1"    
+- "modbus_server:modbus_client_2"    
+- "modbus_server:modbus_client_3"    
+- "modbus_server:modbus_client_4"    
+- "modbus_server:modbus_client_5"    
+- "modbus_server:modbus_client_6"
+
+# Definice topologie kruhu
+links:
+- "modbus_server:modbus_client_1"    
+- "modbus_client_1:modbus_client_2"    
+- "modbus_client_2:modbus_client_3"    
+- "modbus_client_3:modbus_client_4"    
+- "modbus_client_4:modbus_client_5"    
+- "modbus_client_5:modbus_client_6"
+- "modbus_client_6:modbus_server"
+    \end{cminted}
+\caption{Nastavení propojení zařízení pro všechny topologie}
+\label{listing:conf_links}
+\end{listing}
+
 \section{Testovací projekt}
 
-K tomu aby mohla být spuštěna testovací knihovna, tak je potřeba vytvořit testovací projekt. Tento projekt musí obsahovat vytvořenou testovací knihovnu a také testovací knihovny MSTest. Projekt je možné vytvořit ze šablon, jenž jsou poskytnuty IDE Visual Studio 2022\cite{vs2022}. K vytvoření projektu byla použita šablona s názvem \textit{MSTest Test Project}. 
+K tomu aby mohla být spuštěna testovací knihovna, tak je potřeba vytvořit testovací projekt. Tento projekt musí obsahovat vytvořenou testovací knihovnu a také testovací knihovny MSTest. Projekt je možné vytvořit ze šablon, jenž jsou poskytnuty IDE Visual Studio 2022\cite{vs2022}. K vytvoření projektu byla použita šablona s názvem \textit{MSTest Test Project}. Do vytvořeného projektu je následně přidána testovací knihovna prostřednictvím správce balíčků NuGet\cite{nuget}. 
 
-\customtodo{Dopsat}
+K tomu aby program mohl využívat relativních cest pro všechny cesty konfigurační soubory je potřeba nakopírovat všechny potřebné soubory do výstupní složky kompilace. K tomu bylo do projektového souboru přidána direktiva na zkopírování složky \inlinecode{virtual\_env}, která obsahuje všechny potřebné zdroje. Tuto direktivu můžeme vidět na výpisu \ref{listing:copy_virtual_env}
+
+\begin{listing}[htbp]
+    \centering
+    \begin{cminted}[breaklines,autogobble, fontsize=\footnotesize]{xml}
+<ItemGroup>
+    <Content Include="virtual_env\**">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+</ItemGroup>
+    \end{cminted}
+\caption{Direktiva pro zkopírovaní složky při kompilaci}
+\label{listing:copy_virtual_env}
+\end{listing}
+
+
+Po přidání testovací knihovny je potřeba zajistit její inicializaci a také její správné ukončení. Tuto definici lze vidět na výpisu \ref{listing:lib_init}. Tento proces zůstal nepozměněn od původní testovací knihovny. Jak je vidět, pro obě operace existují separátní funkce, které obsahují adekvátní atributy \inlinecode{AssemblyInitialize}, respektive \inlinecode{AssemblyCleanup}. Následně testovací knihovna MSTest zajistí jejich spuštění před započnutím testování a po ukončení testovaní.  
+
+\begin{listing}[htbp]
+    \centering
+    \begin{cminted}[breaklines,autogobble, fontsize=\small]{csharp}
+        [TestClass]
+        public static class TestLibInit
+        {
+            [AssemblyInitialize()]
+            public static void AssemblyInit(TestContext context)
+            {
+                TestLib.API.AssemblyInit(Assembly.GetExecutingAssembly());
+            }
+    
+            [AssemblyCleanup()]
+            public static void AssemblyCleanup()
+            {
+                TestLib.API.AssemblyCleanup();
+            }
+    
+        }
+    \end{cminted}
+\caption{Inicializace a ukončení testovací knihovny}
+\label{listing:lib_init}
+\end{listing}
+
+Následně je potřeba definovat výčtový typ, který bude reprezentovat jednotlivé testy. Testovací knihovna požaduje, aby každý výčtový typ obsahoval atribut \inlinecode{TestEnum}. Díky němu může všechny výčtové typy identifikovat a následně kontrolovat kolize mezi jejich číselnými hodnotami. Definici výčtového typy můžeme vidět na výpisu \ref{listing:test_enum}. 
+
+\begin{listing}[htbp]
+    \centering
+    \begin{cminted}[breaklines,autogobble, fontsize=\small]{csharp}
+[TestEnum]
+public enum TestCaseE
+{
+    TEST_SUCCESS = 0,
+    MODBUS_READ = 10,
+    TEST_IPERF = 6969
+};
+    \end{cminted}
+\caption{Definice výčtového typu který identifikuje jednotlivé testy}
+\label{listing:test_enum}
+\end{listing}
+
+Jak je vidět, výčtový typ obsahuje tři testy:
+
+\begin{itemize}
+    \item \inlinecode{TEST\_SUCCESS} - úspěšný test, který ve všech fázích navrátí hodnotu \inlinecode{true}
+    \item \inlinecode{MODBUS\_READUPDATE} - test definovaný v sekci \ref{sec:modbus_test}
+    \item \inlinecode{TEST\_IPERF} - test na měření výkonu, jenž je popsán v sekci \ref{sec:perfomance_test}
+\end{itemize}
+
+Nyní zbývá jednotlivé třídy dle konvencí testovací knihovny MSTest. Pro každou topologii vytvoříme testovací třídu. Jednotlivé testy v daných třídách budou probíhat na v jednotném virtualizovaném prostředí. Ukázku definice pro topologii sériové linky můžeme vidět na výpisu \ref{listing:test_class}. Jako první je definována metoda \inlinecode{StartUp}. Tato metoda je opatřena atributem \inlinecode{ClassInitialize}, který zaručí její zavolání před spuštěním všech testů v třídě. Následně za pomoci metody \inlinecode{API.BuildEnvironment} je inicializováno dané virtualizované prostředí, kdy v argumentu metoda obdrží cestu ke konfiguračnímu souboru.
+
+Následně je zde metoda \inlinecode{TestReadAndUpdate}, která definuje námi požadovaný test. Tato metoda je opatřena atributem \inlinecode{TestMethod}. Uvnitř metody je následně zavolána metoda \inlinecode{API.Run}, kdy v argumentu je předán identifikátor testu. 
+
+\begin{listing}[htbp]
+    \centering
+    \begin{cminted}[breaklines,autogobble, fontsize=\footnotesize]{csharp}
+        [TestClass]
+        public class ModbusLine
+        {
+    
+            [ClassInitialize]
+            public static void StartUp(TestContext ctx)
+            {
+                API.BuildEnvironment(@"virtual_env\modbus\topologies\modbus-line.yaml");
+            }
+    
+            [TestMethod]
+            public void TestReadAndUpdate()
+            {
+                API.Run(TestCaseE.MODBUS_READUPDATE);
+            }
+        }
+    \end{cminted}
+\caption{Ukázka definice testovací třídy}
+\label{listing:test_class}
+\end{listing}
+
+
+\section{Spuštění testů}
+
+Jednotlivé testy lze spustit přímo z IDE Visual Studio 2022\cite{vs2022}. Po zobrazení okna \textit{Test Explorer} lze vidět všechny testy dostupné v projektu. Ty lze následně ze stejného pohledu i spustit. Po dokončení je následně je vidět zda test proběhl úspěšně, nebo ne. Pohled po úspěšném dokončení všech testů můžeme vidět na obrázku \ref{fig:modbus_test_success}. 
+
+\begin{figure}[htbp]
+    \centering 
+    \includegraphics{assets/img/modbus_test.png}
+    \caption{Pohled při úspěšném dokončení všech testů}
+    \label{fig:modbus_test_success}
+\end{figure}
+
+Po každém testovacím běhu lze v kořenové složce programu nalézt složku se záznamem běhu všech testů. Uvnitř této složky jsou složky dle všech virtualizovaných, které byly během testování použity. Tyto složky mají název dle kolonky \inlinecode{label} v konfiguraci. 
+
+Uvnitř každé složky jsou poté složky s názvy jednotlivých zařízení. Složka je vytvořena právě tehdy, pokud je co ze zařízení uložit, jako například záznam výpisu ze zařízení. V jednotlivých složkách odposlouchávačů komunikace poté nalezneme i záznam komunikace v průběhu testu. 
+
+Výstup ze serveru můžeme vidět na výpisu \ref{listing:modbus_server_log}. Pro kompaktnost z něj byl odstraněna informace o datumu a času zápisu dané zprávy. Jak je vidět, všechna zařízení úspěšně provedli změnu a vždy pouze jeden klient prováděl danou změnu.
+
+\begin{listing}[htbp]
+    \centering
+    \begin{cminted}[breaklines,autogobble, fontsize=\footnotesize]{text}
+        Modbus server started
+        change in coil space [False > True ] at @ 0x0000 from ip: 172.16.16.82   
+        change in hreg space [14671 > 14672] at @ 0x0000 from ip: 172.16.16.82   
+        change in hreg space [36946 > 36947] at @ 0x0001 from ip: 172.16.16.82   
+        change in hreg space [20782 > 20783] at @ 0x0002 from ip: 172.16.16.82   
+        change in hreg space [56603 > 56604] at @ 0x0003 from ip: 172.16.16.82   
+        change in coil space [True  > False] at @ 0x0000 from ip: 172.16.16.82   
+        change in coil space [False > True ] at @ 0x0000 from ip: 172.16.16.51   
+        change in hreg space [14672 > 14673] at @ 0x0000 from ip: 172.16.16.51   
+        change in hreg space [36947 > 36948] at @ 0x0001 from ip: 172.16.16.51   
+        change in hreg space [20783 > 20784] at @ 0x0002 from ip: 172.16.16.51   
+        change in hreg space [56604 > 56605] at @ 0x0003 from ip: 172.16.16.51   
+        change in coil space [True  > False] at @ 0x0000 from ip: 172.16.16.51   
+        change in coil space [False > True ] at @ 0x0000 from ip: 172.16.16.35   
+        change in hreg space [14673 > 14674] at @ 0x0000 from ip: 172.16.16.35   
+        change in hreg space [36948 > 36949] at @ 0x0001 from ip: 172.16.16.35   
+        change in hreg space [20784 > 20785] at @ 0x0002 from ip: 172.16.16.35   
+        change in hreg space [56605 > 56606] at @ 0x0003 from ip: 172.16.16.35   
+        change in coil space [True  > False] at @ 0x0000 from ip: 172.16.16.35   
+        change in coil space [False > True ] at @ 0x0000 from ip: 172.16.16.66   
+        change in hreg space [14674 > 14675] at @ 0x0000 from ip: 172.16.16.66   
+        change in hreg space [36949 > 36950] at @ 0x0001 from ip: 172.16.16.66   
+        change in hreg space [20785 > 20786] at @ 0x0002 from ip: 172.16.16.66   
+        change in hreg space [56606 > 56607] at @ 0x0003 from ip: 172.16.16.66   
+        change in coil space [True  > False] at @ 0x0000 from ip: 172.16.16.66   
+        change in coil space [False > True ] at @ 0x0000 from ip: 172.16.16.74   
+        change in hreg space [14675 > 14676] at @ 0x0000 from ip: 172.16.16.74   
+        change in hreg space [36950 > 36951] at @ 0x0001 from ip: 172.16.16.74   
+        change in hreg space [20786 > 20787] at @ 0x0002 from ip: 172.16.16.74   
+        change in hreg space [56607 > 56608] at @ 0x0003 from ip: 172.16.16.74   
+        change in coil space [True  > False] at @ 0x0000 from ip: 172.16.16.74   
+        change in coil space [False > True ] at @ 0x0000 from ip: 172.16.16.42   
+        change in hreg space [14676 > 14677] at @ 0x0000 from ip: 172.16.16.42   
+        change in hreg space [36951 > 36952] at @ 0x0001 from ip: 172.16.16.42   
+        change in hreg space [20787 > 20788] at @ 0x0002 from ip: 172.16.16.42   
+        change in hreg space [56608 > 56609] at @ 0x0003 from ip: 172.16.16.42   
+        change in coil space [True  > False] at @ 0x0000 from ip: 172.16.16.42   
+    \end{cminted}
+\caption{Výstup na serveru po testu}
+\label{listing:modbus_server_log}
+\end{listing}
+
+Jak již bylo ukázáno u předchozí testovací knihovny\cite{bakalarka}, takto nastavený projekt lze poté spustit prostřednictvím Azure DevOps a tím zcela automatizovat testovaní. Samozřejmě na stroji, na kterém test poběží, musí být splněny predispozice definované v sekci \ref{sec:test_requirements}.

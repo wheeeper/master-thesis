@@ -46,11 +46,13 @@ Všichni účastníci testu musí mít pro provedení daného testu obsahovat im
 
 Testovací služba následně synchronizuje všechny účastníky, tak aby před započetím další testovací fáze všechna zařízení dokončila fázi předchozí. 
 
-\subsection{Možnosti virtualizace v knihovně}
+\subsection{Virtualizační možnosti knihovny}
 
-Původní testovací knihovna definuje již předem zmíněné testovací partnery, kteří jsou virtualizovaní participanti testů, sloužící k simulaci protistrany při testování průmyslové komunikace s testovaným zařízením. Jejich implementace kopíruje implementaci pro testované zařízení. Výhodou je, že k jejich využití je potřeba implementovat pouze samotné rozhraní pro test.
+Testovací knihovna aktuálně nepodporuje virtualizaci, tak jak to bylo nadefinováno v sekci \ref{sec:virtualization}. Všechna zařízení, která byla vytvořena testovací knihovnou běžela na stejném operačním systému bez žádného oddělení.
 
-Každý testovací partner má životnost pouze v průběhu testu. To znamená, že před započetím testu je každý testovací partner vytvořen a připojen k testovací službě a následně po dokončení testu ukončen. Toto umožňuju variabilní počet testovacích partnerů pro každý testů.
+Testovací knihovna ovšem podporuje tzv. testovací partnery. Tato zařízení slouží k simulaci protistrany při testovaní komunikace s testovaným produktem. Ti byly vytvořeny tak, aby běželi nezávisle od testovací služby na vlastním vlákně. Implementace testovacího partnera pak už pouze požadovala dodání implementace testu, jelikož logika běhu zařízení byla už v testovací knihovně obsažena.
+
+Každý testovací partner má životnost pouze v průběhu testu. To znamená, že před započetím testu je každý testovací partner vytvořen a připojen k testovací službě a následně po dokončení testu ukončen. Toto umožňuje variabilní počet testovacích partnerů pro každý test.
 
 \subsection{Topologie zapojení účastníků testu}
 
@@ -89,16 +91,7 @@ Toto potvrzují studie, které zkoumaly rozdíl ve výkonu a efektivnosti využi
 
 V dnešní době existuje mnoho řešení, který využívají kontejnerizaci. V následující sekci porovnám vybraná řešení a zhodnotím jejich vhodnost použití v testovací knihovně. 
 
-K výběru je ale nejdříve potřeba nadefinovat úrovně správy, tedy oblasti, které můžou jednotlivé nástroje spravovat. Ty můžeme dle Aleksic\cite{docker_alt_23} rozdělit do čtyř kategorií:
-
-\begin{description}
-    \item[Image builders] Nástroje, které umožňují vytvářet kontejnery v souladu s pravidly dle OCI.
-    \item[Container managers] V širším smyslu tak můžeme nazvat všechny nástroje, které pomáhají se sestavováním a během kontejnerů. Specificky ale tak můžeme nazvat ty nástroje, které pomáhají spravovat jednotlivé instance kontejnerů.
-    \item[Container runtimes] Nástroje, které se starají o běh kontejnerů.
-    \item[Container engines] Nástroje, které se starají o všechny procesy spojené s  kontejnerizací.
-\end{description}
-
-K úspěšnému využití kontejnerizace je samozřejmě potřeba spravovat všechny procesy spojené s kontejnerizací. Mým cílem je tedy primárně použít k řešení kontejnerizace tzv. \textit{container engines}. Jejich přímým využitím, oproti využití několika nástrojů, které by dohromady tvořili container engine, doufám předejití problémům s kompatibilitou a integrací těchto nástrojů dohromady.
+Mým cílem je tedy primárně použít k řešení kontejnerizace tzv. \textit{container engines}. Jejich přímým využitím, oproti využití několika nástrojů, které by dohromady tvořili container engine, doufám předejití problémům s kompatibilitou a integrací těchto nástrojů dohromady.
 
 Hlavním požadavkem na dané řešení je, aby podporovalo operační systém Windows. Tento požadavek primárně vyvstává z infrastruktury firmy Siemens. Vybranými řešeními tedy jsou
 

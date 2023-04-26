@@ -31,6 +31,8 @@ Rozdílem od stávající knihovny je, že ne všichni účastníci testu musí 
 
 Novým typem zařízení je červeně označený \textit{odposlouchávač komunikace}. Toto zařízení, jak už z názvu vyplývá, bude zaznamenávat komunikaci na právě jednom spojení dvou zařízení. Zároveň bude připojeno k testovací službě. Díky tomuto spojení bude možné zaznamenávat komunikaci pouze v průběhu testu, což ve výsledku bude znamenat, že pro každý test bude existovat separátní záznam komunikace.
 
+
+
 \section{Orchestrace virtualizovaného prostředí}
 
 Důležitou součástí testovací knihovny bude implementace orchestrace virtualizovaného prostředí. To znamená, že testovací služba bude schopna vytvářet jednotlivá virtuální zařízení, které následně automaticky propojí dle požadované topologie a po konci testování daná zařízení ukončí. 
@@ -41,7 +43,7 @@ Knihovna bude obsahovat tzv. \textit{správce virtualizovaného prostředí}. Te
 
 Virtualizované prostředí bude definované za pomoci konfiguračního souboru dle formátu YAML. Hlavní důvod proč využít YAML, místo původního formátu JSON, kterým bylo definováno nastavení testovací knihovny, je co nejbližší přiblížení se aktuálním konvencím v kontextu k Docker compose. Konfigurace bude tedy co nejvíce napodobovat jeho konfigurační soubor. 
 
-První položkou v konfiguračním souboru bude položka \inlinecode{service}. Ta bude obsahovat pouze položku \inlinecode{connections}, která bude obsahovat počet zařízení, která se připojí k testovací službě. Toto číslo musí být větší než 0, jelikož testovací knihovna bude alespoň jedno zařízení vyžadovat.
+První položkou v konfiguračním souboru bude položka \inlinecode{label}. Ta bude obsahovat označení daného virtualizovaného prostředí. Další položkou v konfiguračním souboru bude položka \inlinecode{service}. Ta bude obsahovat pouze položku \inlinecode{connections}, která bude obsahovat počet zařízení, která se připojí k testovací službě. Toto číslo musí být větší než 0.
 
 Další položkou bude položka \inlinecode{containers}. Ta bude obsahovat informace o všech zařízeních, která v daném virtualizovaném prostředí budou. Klíčem každé položky uvnitř této sekce bude název zařízení, které bude fungovat pro referenci daného zařízení. Pro každé zařízení následně půjde definovat tato nastavení: 
 
