@@ -77,6 +77,11 @@ Z analýzy stávajícího stavu knihovny je vidět, že možnost virtualizace pr
     \item zapojit tato zařízení dle definované topologie (sériové linky, kruhu, hvězdy).
 \end{itemize}
 
+Hlavní motivací je zvýšení flexibility knihovny, rozšíření možností využití a minimalizace úsilí potřebného na testovaní, což vše vede ke snížení nákladů na testování. Tyto kroky směřují k snížení závislosti na reálném hardwaru, na kterém běží účastníci testů. 
+
+Hardware a primárně jeho architektura ve spoustě případů hraje důležitou roli. Jsou ovšem komponenty, jejichž chování je stejné, ať už poběží na jakémkoliv stroji. Jejich logika se nijak nemění. Přesunutím testů těchto komponent do virtualizovaného prostředí rozšíří možnosti, jak tyto komponenty testovat. 
+\customtodo{doplnit}
+Je ale samozřejmé, že testy na reálném hardwaru budou vždy potřeba a nelze se této závislosti nijak zbavit.
 
 \subsection{Virtualizace zařízení}
 
