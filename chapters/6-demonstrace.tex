@@ -18,16 +18,16 @@ Zároveň pro Docker Daemon, který je součástí Docker Desktop, musí být na
 \begin{listing}[htbp]
     \centering
     \begin{cminted}[breaklines,autogobble]{json}
-        "default-address-pools": [
-            {
-              "base": "172.17.0.0/12",
-              "size": 20
-            },
-            {
-              "base": "192.168.0.0/16",
-              "size": 24
-            }
-          ]
+"default-address-pools": [
+    {
+      "base": "172.17.0.0/12",
+      "size": 20
+    },
+    {
+      "base": "192.168.0.0/16",
+      "size": 24
+    }
+]
     \end{cminted}
 \caption{Nastavení rozmezí IP adres pro Docker}
 \label{listing:docker_conf}
@@ -109,10 +109,10 @@ Následně je zavolána funkce \inlinecode{handle\_instructions}, která čeká 
 \begin{listing}[htbp]
     \centering
     \begin{minted}[breaklines,autogobble]{python}
-    args = args.parse_args()
-    testrunner = TestRunner(get_test)
-    testrunner.init(args.service, args.port)
-    testrunner.handle_instructions()
+args = args.parse_args()
+testrunner = TestRunner(get_test)
+testrunner.init(args.service, args.port)
+testrunner.handle_instructions()
     \end{minted}
 \caption{Spuštění řízení testovaného zařízení}
 \label{listing:server_main}
@@ -152,32 +152,32 @@ Následně lze vidět definice klientů. Ty jsou pojmenování pod názvem \inli
 \begin{listing}[htbp]
     \centering
     \begin{minted}[breaklines,autogobble, fontsize=\footnotesize]{yaml}
-        label: modbus_(line|star|circle)
-        service:
-          connections: 6
-        containers:
-            modbus_server:
-              build: 
-                  dockerfile: ..\server\Dockerfile
-              type: default
-              commands:
-                - "/opt/venv/bin/python /app/main.py"
-              logging: true
-            modbus_client_1:
-              build: 
-                  dockerfile: ..\client\Dockerfile
-              type: default
-              commands:
-                - "/opt/venv/bin/python /app/main.py -s host.docker.internal -p 1337"
-                .
-                .
-                .
-            modbus_client_6:
-              build: 
-                  dockerfile: ..\client\Dockerfile
-              type: default
-              commands:
-                - "/opt/venv/bin/python /app/main.py -s host.docker.internal -p 1337"
+label: modbus_(line|star|circle)
+service:
+  connections: 6
+containers:
+    modbus_server:
+      build: 
+          dockerfile: ..\server\Dockerfile
+      type: default
+      commands:
+        - "/opt/venv/bin/python /app/main.py"
+      logging: true
+    modbus_client_1:
+      build: 
+          dockerfile: ..\client\Dockerfile
+      type: default
+      commands:
+        - "/opt/venv/bin/python /app/main.py -s host.docker.internal -p 1337"
+        .
+        .
+        .
+    modbus_client_6:
+      build: 
+          dockerfile: ..\client\Dockerfile
+      type: default
+      commands:
+        - "/opt/venv/bin/python /app/main.py -s host.docker.internal -p 1337"
     \end{minted}
 \caption{Nastavení zařízení v konfiguraci virtualizovaného prostředí}
 \label{listing:conf_devices}
@@ -245,22 +245,21 @@ Po přidání testovací knihovny je potřeba zajistit její inicializaci a tak�
 \begin{listing}[htbp]
     \centering
     \begin{cminted}[breaklines,autogobble, fontsize=\small]{csharp}
-        [TestClass]
-        public static class TestLibInit
-        {
-            [AssemblyInitialize()]
-            public static void AssemblyInit(TestContext context)
-            {
-                TestLib.API.AssemblyInit(Assembly.GetExecutingAssembly());
-            }
-    
-            [AssemblyCleanup()]
-            public static void AssemblyCleanup()
-            {
-                TestLib.API.AssemblyCleanup();
-            }
-    
-        }
+[TestClass]
+public static class TestLibInit
+{
+    [AssemblyInitialize()]
+    public static void AssemblyInit(TestContext context)
+    {
+        TestLib.API.AssemblyInit(Assembly.GetExecutingAssembly());
+    }
+
+    [AssemblyCleanup()]
+    public static void AssemblyCleanup()
+    {
+        TestLib.API.AssemblyCleanup();
+    }
+}
     \end{cminted}
 \caption{Inicializace a ukončení testovací knihovny}
 \label{listing:lib_init}
@@ -298,22 +297,21 @@ Následně je zde metoda \inlinecode{TestReadAndUpdate}, která definuje námi p
 \begin{listing}[htbp]
     \centering
     \begin{cminted}[breaklines,autogobble, fontsize=\footnotesize]{csharp}
-        [TestClass]
-        public class ModbusLine
-        {
-    
-            [ClassInitialize]
-            public static void StartUp(TestContext ctx)
-            {
-                API.BuildEnvironment(@"virtual_env\modbus\topologies\modbus-line.yaml");
-            }
-    
-            [TestMethod]
-            public void TestReadAndUpdate()
-            {
-                API.Run(TestCaseE.MODBUS_READUPDATE);
-            }
-        }
+[TestClass]
+public class ModbusLine
+{
+    [ClassInitialize]
+    public static void StartUp(TestContext ctx)
+    {
+        API.BuildEnvironment(@"virtual_env\modbus\topologies\modbus-line.yaml");
+    }
+
+    [TestMethod]
+    public void TestReadAndUpdate()
+    {
+        API.Run(TestCaseE.MODBUS_READUPDATE);
+    }
+}
     \end{cminted}
 \caption{Ukázka definice testovací třídy}
 \label{listing:test_class}
@@ -340,43 +338,43 @@ Výstup ze serveru můžeme vidět na výpisu \ref{listing:modbus_server_log}. P
 \begin{listing}[htbp]
     \centering
     \begin{cminted}[breaklines,autogobble, fontsize=\footnotesize]{text}
-        Modbus server started
-        change in coil space [False > True ] at @ 0x0000 from ip: 172.16.16.82   
-        change in hreg space [14671 > 14672] at @ 0x0000 from ip: 172.16.16.82   
-        change in hreg space [36946 > 36947] at @ 0x0001 from ip: 172.16.16.82   
-        change in hreg space [20782 > 20783] at @ 0x0002 from ip: 172.16.16.82   
-        change in hreg space [56603 > 56604] at @ 0x0003 from ip: 172.16.16.82   
-        change in coil space [True  > False] at @ 0x0000 from ip: 172.16.16.82   
-        change in coil space [False > True ] at @ 0x0000 from ip: 172.16.16.51   
-        change in hreg space [14672 > 14673] at @ 0x0000 from ip: 172.16.16.51   
-        change in hreg space [36947 > 36948] at @ 0x0001 from ip: 172.16.16.51   
-        change in hreg space [20783 > 20784] at @ 0x0002 from ip: 172.16.16.51   
-        change in hreg space [56604 > 56605] at @ 0x0003 from ip: 172.16.16.51   
-        change in coil space [True  > False] at @ 0x0000 from ip: 172.16.16.51   
-        change in coil space [False > True ] at @ 0x0000 from ip: 172.16.16.35   
-        change in hreg space [14673 > 14674] at @ 0x0000 from ip: 172.16.16.35   
-        change in hreg space [36948 > 36949] at @ 0x0001 from ip: 172.16.16.35   
-        change in hreg space [20784 > 20785] at @ 0x0002 from ip: 172.16.16.35   
-        change in hreg space [56605 > 56606] at @ 0x0003 from ip: 172.16.16.35   
-        change in coil space [True  > False] at @ 0x0000 from ip: 172.16.16.35   
-        change in coil space [False > True ] at @ 0x0000 from ip: 172.16.16.66   
-        change in hreg space [14674 > 14675] at @ 0x0000 from ip: 172.16.16.66   
-        change in hreg space [36949 > 36950] at @ 0x0001 from ip: 172.16.16.66   
-        change in hreg space [20785 > 20786] at @ 0x0002 from ip: 172.16.16.66   
-        change in hreg space [56606 > 56607] at @ 0x0003 from ip: 172.16.16.66   
-        change in coil space [True  > False] at @ 0x0000 from ip: 172.16.16.66   
-        change in coil space [False > True ] at @ 0x0000 from ip: 172.16.16.74   
-        change in hreg space [14675 > 14676] at @ 0x0000 from ip: 172.16.16.74   
-        change in hreg space [36950 > 36951] at @ 0x0001 from ip: 172.16.16.74   
-        change in hreg space [20786 > 20787] at @ 0x0002 from ip: 172.16.16.74   
-        change in hreg space [56607 > 56608] at @ 0x0003 from ip: 172.16.16.74   
-        change in coil space [True  > False] at @ 0x0000 from ip: 172.16.16.74   
-        change in coil space [False > True ] at @ 0x0000 from ip: 172.16.16.42   
-        change in hreg space [14676 > 14677] at @ 0x0000 from ip: 172.16.16.42   
-        change in hreg space [36951 > 36952] at @ 0x0001 from ip: 172.16.16.42   
-        change in hreg space [20787 > 20788] at @ 0x0002 from ip: 172.16.16.42   
-        change in hreg space [56608 > 56609] at @ 0x0003 from ip: 172.16.16.42   
-        change in coil space [True  > False] at @ 0x0000 from ip: 172.16.16.42   
+Modbus server started
+change in coil space [False > True ] at @ 0x0000 from ip: 172.16.16.82   
+change in hreg space [14671 > 14672] at @ 0x0000 from ip: 172.16.16.82   
+change in hreg space [36946 > 36947] at @ 0x0001 from ip: 172.16.16.82   
+change in hreg space [20782 > 20783] at @ 0x0002 from ip: 172.16.16.82   
+change in hreg space [56603 > 56604] at @ 0x0003 from ip: 172.16.16.82   
+change in coil space [True  > False] at @ 0x0000 from ip: 172.16.16.82   
+change in coil space [False > True ] at @ 0x0000 from ip: 172.16.16.51   
+change in hreg space [14672 > 14673] at @ 0x0000 from ip: 172.16.16.51   
+change in hreg space [36947 > 36948] at @ 0x0001 from ip: 172.16.16.51   
+change in hreg space [20783 > 20784] at @ 0x0002 from ip: 172.16.16.51   
+change in hreg space [56604 > 56605] at @ 0x0003 from ip: 172.16.16.51   
+change in coil space [True  > False] at @ 0x0000 from ip: 172.16.16.51   
+change in coil space [False > True ] at @ 0x0000 from ip: 172.16.16.35   
+change in hreg space [14673 > 14674] at @ 0x0000 from ip: 172.16.16.35   
+change in hreg space [36948 > 36949] at @ 0x0001 from ip: 172.16.16.35   
+change in hreg space [20784 > 20785] at @ 0x0002 from ip: 172.16.16.35   
+change in hreg space [56605 > 56606] at @ 0x0003 from ip: 172.16.16.35   
+change in coil space [True  > False] at @ 0x0000 from ip: 172.16.16.35   
+change in coil space [False > True ] at @ 0x0000 from ip: 172.16.16.66   
+change in hreg space [14674 > 14675] at @ 0x0000 from ip: 172.16.16.66   
+change in hreg space [36949 > 36950] at @ 0x0001 from ip: 172.16.16.66   
+change in hreg space [20785 > 20786] at @ 0x0002 from ip: 172.16.16.66   
+change in hreg space [56606 > 56607] at @ 0x0003 from ip: 172.16.16.66   
+change in coil space [True  > False] at @ 0x0000 from ip: 172.16.16.66   
+change in coil space [False > True ] at @ 0x0000 from ip: 172.16.16.74   
+change in hreg space [14675 > 14676] at @ 0x0000 from ip: 172.16.16.74   
+change in hreg space [36950 > 36951] at @ 0x0001 from ip: 172.16.16.74   
+change in hreg space [20786 > 20787] at @ 0x0002 from ip: 172.16.16.74   
+change in hreg space [56607 > 56608] at @ 0x0003 from ip: 172.16.16.74   
+change in coil space [True  > False] at @ 0x0000 from ip: 172.16.16.74   
+change in coil space [False > True ] at @ 0x0000 from ip: 172.16.16.42   
+change in hreg space [14676 > 14677] at @ 0x0000 from ip: 172.16.16.42   
+change in hreg space [36951 > 36952] at @ 0x0001 from ip: 172.16.16.42   
+change in hreg space [20787 > 20788] at @ 0x0002 from ip: 172.16.16.42   
+change in hreg space [56608 > 56609] at @ 0x0003 from ip: 172.16.16.42   
+change in coil space [True  > False] at @ 0x0000 from ip: 172.16.16.42   
     \end{cminted}
 \caption{Výstup na serveru po testu}
 \label{listing:modbus_server_log}
