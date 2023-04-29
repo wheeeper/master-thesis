@@ -42,10 +42,7 @@ Jak je vidět z jenom z tohoto krátkého seznamu, důvodů proč virtualizovat 
     \label{fig:pc_stack}
 \end{figure}
 
-V případě dnes nejpopulárnější architektury x86 je potřeba i rozlišit, s jakými právy daná virtualizace běží. Architektura x86 definuje tzv. \textit{protekční kruhy}, kde každý kruh(anglicky se tyto úrovně označují jako \textit{ring}), neboli úroveň, definuje, co daná aplikace může a nemůže udělat. Grafickou představu těchto úrovní můžeme vidět na obrázku \ref{fig:priv_rings}. Jak je vidět, čím nižší úroveň, tím více práv software běžící v této úrovni má. Typicky, v úrovni 0 běží operační systém a aplikace následně běží v úrovni 3. V 
-
-
-\cite{RODRIGUEZHARO2012267}
+V případě dnes nejpopulárnější architektury x86 je potřeba i rozlišit, s jakými právy daná virtualizace běží. Architektura x86 definuje tzv. \textit{protekční kruhy}, kde každý kruh(anglicky se tyto úrovně označují jako \textit{ring}), neboli úroveň, definuje, co daná aplikace může a nemůže udělat. Grafickou představu těchto úrovní můžeme vidět na obrázku \ref{fig:priv_rings}. Jak je vidět, čím nižší úroveň, tím více práv software běžící v této úrovni má. Typicky, v úrovni 0 běží operační systém, v úrovních 1 a 2 systémové ovladače, a v úrovni 3 tři samotné aplikace. \cite{RODRIGUEZHARO2012267}
 
 \begin{figure}[htbp]
     \centering 
