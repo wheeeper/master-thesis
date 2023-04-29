@@ -48,7 +48,7 @@ Testovací služba následně synchronizuje všechny účastníky, tak aby před
 
 \subsection{Virtualizační možnosti knihovny}
 
-Testovací knihovna aktuálně nepodporuje virtualizaci, tak jak to bylo nadefinováno v sekci \ref{sec:virtualization}. Všechna zařízení, která byla vytvořena testovací knihovnou běžela na stejném operačním systému bez žádného oddělení.
+Testovací knihovna aktuálně nepodporuje virtualizaci, jenž byla definováno v sekci \ref{sec:virtualization}. Všechna zařízení, která byla vytvořena testovací knihovnou běžela na stejném operačním systému bez žádného oddělení.
 
 Testovací knihovna ovšem podporuje tzv. testovací partnery. Tato zařízení slouží k simulaci protistrany při testovaní komunikace s testovaným produktem. Ti byly vytvořeny tak, aby běželi nezávisle od testovací služby na vlastním vlákně. Implementace testovacího partnera pak už pouze požadovala dodání implementace testu, jelikož logika běhu zařízení byla už v testovací knihovně obsažena.
 
@@ -58,7 +58,7 @@ Každý testovací partner má životnost pouze v průběhu testu. To znamená, 
 
 V případě verifikace průmyslové komunikace je samozřejmě podstatné, aby všichni účastníci testu byli schopni komunikovat mezi sebou dle potřeb daných testů. Aktuální knihovna ale toto nijak nekontroluje. 
 
-Jediný požadavek knihovny je, aby každý účastník testu byl připojen k testovací službě a odpovídal na její požadavky. Samotné testované zařízení se připojuje před započetím testování a do konce všech testů připojeno. Testovací partneři, jak už jsem zmínil, se připojují dle potřeby před započetím jednotlivých testů.
+Jediný požadavek knihovny je, aby každý účastník testu byl připojen k testovací službě a odpovídal na její požadavky. Samotné testované zařízení se připojuje před započetím testování a do konce všech testů musí zůstat připojeno. Testovací partneři, jak už jsem zmínil, se připojují dle potřeby před započetím jednotlivých testů.
 
 Knihovna tedy nijak neřeší topologii zapojení jednotlivých zařízení. Je zde tedy předpoklad, že testovací partneři budou schopni komunikovat s ostatními účastníky testu díky tomu, že samotná testovací služba je schopna s nimi komunikovat. Zároveň, pokud by z nějakého důvodu komunikace nebyla možná, tak musí selhat samotné testy.
 
@@ -66,49 +66,52 @@ Knihovna tedy nijak neřeší topologii zapojení jednotlivých zařízení. Je 
 
 I když testovací knihovna přináší zjednodušení a zautomatizovaní testování průmyslové komunikace, stále je zde prostor pro zlepšení. Knihovna v aktuální podobě podporuje pouze limitovanou virtualizaci. Za pomoci knihovny jsme sice schopni simulovat protistranu, ale již ne samotné zařízení a to vždy musí běžet nezávisle na knihovně. 
 
-Aktuální nový požadavek na řešení topologie zapojení zařízení nesplňuje vůbec. Zároveň v již existujícím řešení limitující požadavek, že pro každý test musí každý účastník testu obsahovat implementaci testu. Toto nemusí být vždy potřeba, například při testování veřejného rozhraní.
+Aktuální nový požadavek na řešení topologie zapojení zařízení nesplňuje vůbec. Zároveň v již existujícím řešení limitující požadavek, že pro každý test musí každý účastník testu obsahovat implementaci testu. Toto nemusí být vždy potřeba, například při testování veřejného rozhraní. 
 
 \section{Možnosti rozšíření virtualizačních prvků}
 
-Z analýzy stávajícího stavu knihovny je vidět, že možnost virtualizace prostřednictvím stávající knihovny jsou limitované. Knihovna nepodporuje možnost simulovat jakékoliv zařízení a vůbec neřeší topologii zapojení daných zařízení. Rozšířením knihovny tedy chceme docílit větší možnosti virtualizace a simulace reálného prostředí. Nová knihovna by tedy měla cílit na
+Z analýzy stávajícího stavu knihovny je vidět, že možnost virtualizace prostřednictvím stávající knihovny jsou limitované. Knihovna nepodporuje možnost simulovat jakékoliv zařízení a vůbec neřeší topologii zapojení daných zařízení. Rozšířením knihovny tedy chceme docílit větší možnosti simulace jednotlivých zařízení a jejich propojení, čímž se zlepší simulace reálného prostředí. Nová knihovna by tedy měla cílit na
 
 \begin{itemize}
     \item možnost spustit jakékoliv zařízení jako virtualizované,
     \item zapojit tato zařízení dle definované topologie (sériové linky, kruhu, hvězdy).
 \end{itemize}
 
-Hlavní motivací je zvýšení flexibility knihovny, rozšíření možností využití a minimalizace úsilí potřebného na testovaní, což vše vede ke snížení nákladů na testování. Tyto kroky směřují k snížení závislosti na reálném hardwaru, na kterém běží účastníci testů. 
-
-Hardware a primárně jeho architektura ve spoustě případů hraje důležitou roli. Jsou ovšem komponenty, jejichž chování je stejné, ať už poběží na jakémkoliv stroji. Jejich logika se nijak nemění. Přesunutím testů těchto komponent do virtualizovaného prostředí rozšíří možnosti, jak tyto komponenty testovat. 
-\customtodo{doplnit}
-Je ale samozřejmé, že testy na reálném hardwaru budou vždy potřeba a nelze se této závislosti nijak zbavit.
+Hlavní motivací je zvýšení flexibility knihovny, rozšíření možností využití a minimalizace úsilí potřebného na testovaní, což vše vede ke snížení nákladů na testování. Tyto kroky také směřují k snížení závislosti na reálném hardwaru, na kterém běží účastníci testů. Je ale samozřejmé, že testy na reálném hardwaru budou vždy potřeba a nelze se této závislosti nijak zbavit.
 
 \subsection{Virtualizace zařízení}
 
-Při virtualizaci zařízení máme na výběr více možností jak virtualizovat. První možnost je vytvoření virtuální mašiny pro každé zařízení prostřednictvím hypervizoru. Tato možnost sice splňuje podmínku na to spustit každé zařízení jako virtualizované, ale pro toto použití je nevhodné. 
+Možností jak virtualizovat zařízení existuje několik. Tyto techniky byly přiblíženy v sekci \ref{sec:virtualization}. Co je tedy nejvhodnějším přístupem k virtualizaci námi požadovaných průmyslových zařízení? 
 
-Logickou možností je použití virtualizace skrz kontejnerizaci. Díky kontejnerizaci můžeme jednoduše spustit $n$ zařízení na jednom hardwaru. Pokud bychom měli virtuální mašiny pro $n$ zařízení, tak by zároveň muselo běžet $n$ operačních systémů, což snižuje efektivnost využití výpočetních zdrojů. Zároveň můžeme jednoduše a dynamicky vytvářet virtuální sítě, které budou splňovat požadovanou topologii. 
+Jedno z možností je vytvoření VM pro každé virtualizované zařízení. Volba operačního systému poté závisí na zařízení. Pro zachování univerzálnosti hostitelského zařízení dává smysl použití hypervizoru typu II.
 
-Toto potvrzují studie, které zkoumaly rozdíl ve výkonu a efektivnosti využití výpočetních zdrojů mezi kontejnerizací prostřednictvím softwaru Docker a virtualizačního řešení KVM, který umožnuje jádru fungovat jako hypervizor. Při jejich porovnání bylo zjištěno, že díky nástroji Docker jsou virtuální zařízení schopna být spuštěna rychleji a využívají méně výpočetních zdrojů. V porovnání při počítání HPC(High performance counting) úkolů, bylo dosaženo díky nástroji Docker lepšího výkonu o 42\,\% při úkolech náročných na procesor a o 14,98\,\% lepšího výkonu při úkolech náročných na interní paměť.\cite{kvmdockercomp}\cite{2021virt} \note{Asi bude potřebovat ještě uhladit v závuslosti na teoretické časti atd.}
+Logickou možností je také použití virtualizace skrz kontejnerizaci. Díky kontejnerizaci nemusíme virtualizovat celé operační systémy, ale pouze jejich části, čímž můžeme ušetřit výpočetní zdroje.
 
+Které přístup je tedy efektivnější? Dle studií, které zkoumaly rozdíl ve výkonu a efektivnosti využití výpočetních zdrojů mezi kontejnerizací prostřednictvím softwaru Docker a virtualizačního řešení KVM, který umožňuje jádru fungovat jako hypervizor, vyhrává kontejnerizace. 
+
+Při jejich porovnání bylo zjištěno, že s použitím kontejnerizačního řešení Docker je virtualizovaná zařízení spouštět výrazně rychleji. Tato zařízení také spotřebovávají méně výpočetních zdrojů. V porovnání při počítání HPC(High performance counting) úkolů, bylo dosaženo díky nástroji Docker lepšího výkonu o 42\,\% při úkolech náročných na procesor a o 14,98\,\% lepšího výkonu při úkolech náročných na interní paměť.\cite{kvmdockercomp}\cite{2021virt} 
+
+Jak je tedy vidět, virtualizace kontejnerizací je efektivnější. V následující analýze tedy budeme uvažovat již pouze kontejnerizační řešení. 
 
 \subsection{Porovnání kontejnerizačních řešení}
 
-V dnešní době existuje mnoho řešení, který využívají kontejnerizaci. V následující sekci porovnám vybraná řešení a zhodnotím jejich vhodnost použití v testovací knihovně. 
+V dnešní době existuje mnoho řešení, který využívají kontejnerizaci. V následující sekci budou porovnána jednotlivá vybraná řešení a zhodnocena jejich vhodnost pro použití v testovací knihovně. 
 
-Mým cílem je tedy primárně použít k řešení kontejnerizace tzv. \textit{container engines}. Jejich přímým využitím, oproti využití několika nástrojů, které by dohromady tvořili container engine, doufám předejití problémům s kompatibilitou a integrací těchto nástrojů dohromady.
+Cílem je tedy primárně použít k řešení kontejnerizace tzv. \textit{container engines}. Jejich přímým využitím, oproti využití několika nástrojů, které by dohromady tvořili container engine, doufám předejití problémům s kompatibilitou a integrací těchto nástrojů dohromady.
 
 Hlavním požadavkem na dané řešení je, aby podporovalo operační systém Windows. Tento požadavek primárně vyvstává z infrastruktury firmy Siemens. Vybranými řešeními tedy jsou
 
 \begin{itemize}
     \item Docker,
-    \item Podman,
-    \item Vagrant. 
+    \item Podman.
 \end{itemize}
 
+Obě tato řešení jsou velice srovnatelná. Jak bylo zmíněno, ve spoustě případů je možné zaměnit příkaz \inlinecode{docker} za \inlinecode{podman} bez žádných problémů. 
 
-\subsection{Shrnutí}
+Pokud se ovšem zaměříme na jejich rozdíly, tak Docker v základu podporuje více síťových ovladačů. Je ovšem možné také implementovat vlastní síťový ovladač. \cite{docker_networking_overview}
 
-Při pohledu na vytvořenou analýzu je vidět, že Vagrant vyšel z této analýzy na poslední příčce. Díky rozdílnému primárnímu zaměření pokulhává v několika kategoriích, především v efektivitě využití výpočetních zdrojů. Zároveň za tuto velkou cenu nepřináší žádné výhody oproti ostatním nástrojům.
+Největší výhoda ovšem nastává v rozšířenosti softwaru Docker. Při pohledu na dostupnost knihoven integrujících software Docker do prostředí .NET, ve kterém běží stávající knihovna, je vidět rovnou několik možností, které lze využít. Oproti tomu pro software Podman tyto integrace neexistují. Při jeho integraci by tedy bylo potřeba vytvořit vlastní integraci. 
 
-Docker a Podman jsou velice podobné nástroje a ve spoustě případů je každý z nich dobrou volbou. Pro použití v testovací knihovně ovšem vyhrává Docker. Hlavním důvodem je jeho nativní podpora platformy Windows. Další velkou výhodou je jeho široká rozšířenost, což vede k velice aktivní komunitě vývojářů, jejichž knihovny a návody velice usnadňují jeho integraci. 
+Zároveň Podman je navrhnut primárně pro operační systém Linux. Jeho použití je sice na operačním systému možné, ale každý kontejner musí obsahovat hostující Linuxový systém. 
+
+Jak je tedy vidět, pro použití v testovací knihovně je vhodnější využití softwaru Docker. V aktuální podobě jeho použití přináší jasné benefity. 

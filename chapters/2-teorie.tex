@@ -42,7 +42,10 @@ Jak je vidět z jenom z tohoto krátkého seznamu, důvodů proč virtualizovat 
     \label{fig:pc_stack}
 \end{figure}
 
-V případě dnes nejpopulárnější architektury x86 je potřeba i rozlišit, s jakými právy daná virtualizace běží. Architektura x86 definuje tzv. \textit{protekční kruhy}, kde každý kruh(anglicky se tyto úrovně označují jako \textit{ring}), neboli úroveň, definuje, co daná aplikace může a nemůže udělat. Grafickou představu těchto úrovní můžeme vidět na obrázku \ref{fig:priv_rings}. Jak je vidět, čím nižší úroveň, tím více práv aplikace běžící v této úrovni má. Typicky, v úrovni 0 běží operační systém a aplikace následně běží v úrovni 3. \cite{RODRIGUEZHARO2012267}
+V případě dnes nejpopulárnější architektury x86 je potřeba i rozlišit, s jakými právy daná virtualizace běží. Architektura x86 definuje tzv. \textit{protekční kruhy}, kde každý kruh(anglicky se tyto úrovně označují jako \textit{ring}), neboli úroveň, definuje, co daná aplikace může a nemůže udělat. Grafickou představu těchto úrovní můžeme vidět na obrázku \ref{fig:priv_rings}. Jak je vidět, čím nižší úroveň, tím více práv software běžící v této úrovni má. Typicky, v úrovni 0 běží operační systém a aplikace následně běží v úrovni 3. V 
+
+
+\cite{RODRIGUEZHARO2012267}
 
 \begin{figure}[htbp]
     \centering 
@@ -179,8 +182,13 @@ Výstupní objektový soubor je následně použit jako vstup pro vytvoření dy
 
 \subsubsection{VMware}
 
+VMware je dnes známá technologická firma se širokou škálou produktů. To co ale popularizovalo tuto firmu a její produkty je virtualizace. Firma VMware podporuje oba dva typy hypervizorů, jenž jsou na obrázku \ref{fig:vm_types}. 
 
+Implementace hypervizoru typu I se nazývá VMware ESXi a zaměřuje se komerční virtualizaci serveru a jím poskytnutých služeb. Dle definice typu, hypervizor běží přímo nad hardwarem a tedy i přímo s ním komunikuje. Všechny VM následně běží nad tímto hypervizorem. \cite{gillis_2022}
 
+Hypervizor typu II. poté můžeme nálezt v produktu VMware Workstation. Tento produkt je zaměřen na virtualizaci na osobním počítači. Produkt, který je nainstalován v prostoru hostujícího operačního systému, je spouštěn jako kterýkoliv jiný program. Jeho součastí ovšem je předem zmíněný hypervizor, který se stará o propojení mezi VM a hardwarem. Komunikaci s hardwarem potom hypervizor realizuje za pomoci systémových volání hostujícího operačního systému. \cite{9647226}
+
+Oba dva tyto produkty pracují na úrovní virtualizace celého operačního systému, tedy všechny VM obsahují plnohodnotný hostovaný operační systém.
 
 \subsubsection{Docker} \customtodo{zmínit docker compose a dockefile}
 Docker je neznámějším a nejrozšířenějším nástrojem, který zprostředkovává kontejnerizaci. Proto také ve většině případech je většina ostatních nástrojů s Docker srovnávaná. Docker se skládá z několika hlavních komponent, které dohromady tvoří container engine. Mezi tyto komponenty patří
