@@ -32,6 +32,28 @@ Rozdílem od stávající knihovny je, že ne všichni účastníci testu musí 
 Novým typem zařízení je červeně označený \textit{odposlouchávač komunikace}. Toto zařízení, jak už z názvu vyplývá, bude zaznamenávat komunikaci na právě jednom spojení dvou zařízení. Zároveň bude připojeno k testovací službě. Díky tomuto spojení bude možné zaznamenávat komunikaci pouze v průběhu testu, což ve výsledku bude znamenat, že pro každý test bude existovat separátní záznam komunikace.
 
 
+\subsection{Propojení s externími komponentami}
+
+Testovací knihovna bude využívat k testování tyto komponenty:
+
+\begin{itemize}
+    \item Testovací knihovnu MSTest
+    \item Kontejnerizační řešení Docker
+\end{itemize}
+
+Každá komponenta má své důležité využití. Testovací knihovna MSTest, která je již využita ve stávající knihovně, umožňuje testy spouštět, díky její široké integraci. Díky ní je mimo jiné možné testy spouštět na Azure DevOps, za pomocí než lze dosáhnout plné automatizace testování.
+
+S pomocí virtualizačního řešení Docker bude knihovna následně schopna vytvářet jednotlivá virtualizovaná zařízení a následně je propojovat mezi sebou do požadovaných topologií. 
+
+To vše umožní testovací knihovně úspěšně testovat. Jejich propojení můžeme vidět na obrázku \ref{fig:run_stack}. Jak lze vidět, testovací knihovna je ovládána prostřednictvím testovací knihovny MSTest. Ta poté provede všechny potřebné operace, jako vytvoření testovací služby a vytvoření virtualizovaného prostředí, které je vytvářeno pomocí softwaru Docker. Všechny vytvořené zdroje jsou poté na konci testování odstraněny.  
+
+\begin{figure}[htbp]
+    \centering 
+    \includegraphics[width=\textwidth]{assets/img/run_stack.pdf}
+    \caption{Propojení a komunikace mezi komponenty v testovací knihovně}
+    \label{fig:run_stack}
+\end{figure}
+
 
 \section{Orchestrace virtualizovaného prostředí}
 
