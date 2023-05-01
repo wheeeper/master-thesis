@@ -100,7 +100,7 @@ Po vytvoření všech sítí metoda vypočítá statického směrovaní pro kaž
 
 Nejbližší cesta do dané sítě je zjišťována za pomoci algoritmu BFS, jenž je implementován ve stejnojmenné metodě. BFS, neboli Breadth first search, funguje na principu prohledávání do šířky. Algoritmus nejdříve obdrží informace o počátečním a konečném zařízení, tedy o uzlech, mezi kterými má nalézt cestu. 
 
-V počátku si algoritmus vytvoří frontu uzlů ke zpracování a seznam navštívených uzlů. Následně do fronty je vložen počáteční uzel a označen jako navštívený. Algoritmus následně ve smyčce skrz všechny položky fronty zkoumá jednotlivé uzly. Po vyjmutí prvního uzlu z fronty algoritmus zkoumá všechny jeho sousední uzly. Pokud sousední uzel ještě nebyl navštíven, tak poté je přidán na konec fronty. Po prozkoumání všech sousedních uzlů algoritmus pokračuje na další položku ve frontě. Součástí jednotlivých položek ve frontě je mimo informace o uzlu, který má být zpracován, také seznam uzlů, který reprezentuje cestu do daného uzlu k zpracování z počátečního uzlu. V případě, kdy uzel, který má být zpracován, je shodný s koncovým uzlem, tak je navrácen seznam uzlů reprezentující cestu do koncového uzlu. Pokud není nalezena cesta, tak poté metoda navrací prázdný seznam.
+V počátku si algoritmus vytvoří frontu uzlů ke zpracování a seznam navštívených uzlů. Následně do fronty je vložen počáteční uzel a označen jako navštívený. Algoritmus následně ve smyčce skrz všechny položky fronty zkoumá jednotlivé uzly. Po vyjmutí prvního uzlu z fronty algoritmus zkoumá všechny jeho sousední uzly. Pokud sousední uzel ještě nebyl navštíven, tak poté je přidán na konec fronty. Po prozkoumání všech sousedních uzlů algoritmus pokračuje na další položku ve frontě. Součástí jednotlivých položek ve frontě je mimo informace o uzlu, který má být zpracován, také seznam uzlů, který reprezentuje cestu do daného uzlu k zpracování z počátečního uzlu. V případě, kdy uzel, který má být zpracován, je shodný s koncovým uzlem, tak je navrácen seznam uzlů reprezentující cestu do koncového uzlu. Pokud není nalezena cesta, tak poté metoda navrací prázdný seznam. \cite{pruvodce_alogritmu}
 
 Ukázkový běh algoritmu můžeme vidět na obrázku \ref{fig:bfs}. Na něm lze vidět jednotlivé iterace algoritmu, kde stav každého uzlu je označen těmito barvami:
 
@@ -121,7 +121,7 @@ Jak je vidět, algoritmus postupně nachází všechny uzly od počátečního d
 \end{figure}
 
 
-Pomocí tohoto algoritmu je tedy zjištěna nejkratší cesta do dané sítě. Tato cesta je nalezena v nejhorším případě v komplexitě $O(|V| + |E|)$, kde $|V|$ je počet uzlů, neboli kontejnerizovaných zařízení, a $|E|$ je počet hran mezi uzly, neboli spojení mezi zařízeními. Zároveň metoda pro každé zařízení může být volána maximálně $|V| - 1$ krát. Tyto vlastnosti jsou naprosto dostačující pro aktuální použití.\customtodo{Citovat bfs}
+Pomocí tohoto algoritmu je tedy zjištěna nejkratší cesta do dané sítě. Tato cesta je nalezena v nejhorším případě v komplexitě $O(|V| + |E|)$, kde $|V|$ je počet uzlů, neboli kontejnerizovaných zařízení, a $|E|$ je počet hran mezi uzly, neboli spojení mezi zařízeními. \cite{pruvodce_alogritmu} Zároveň metoda pro každé zařízení může být volána maximálně $|V| - 1$ krát. Tyto vlastnosti jsou naprosto dostačující pro aktuální použití.
 
 Metoda tedy navrací seznam zařízení, bez počátečního zařízení, který reprezentuje cestu od počátečního zařízení do cílového zařízení, neboli do dané sítě. Podstatnou informací je první položka v seznamu, tedy to sousední zařízení, kterému musí být zpráva odeslaná z daného zařízení, aby dosáhla cílového. To je nastaveno jako směr, kterým mají být všechny zprávy do dané sítě odesílány. Tímto způsobem implementace je testovací knihovna schopna nastavit všechny požadované topologie. Zároveň vždy odesílá zprávy nejkratší možnou cestou.
 
@@ -131,20 +131,20 @@ Stejně jako síť, i kontejnery mají svého správce, realizovaného třídou 
 
 Po přidání všech zařízení je možné zavolat metodu \inlinecode{Build}. Ta očekává jako argument instanci třídy \inlinecode{NetworkManager}, která již má vypočítané nastavení sítě daných zařízení. Nastavení pro jednotlivé zařízení jsou získávána za pomoci metody \inlinecode{NetworkManager.GetContainerConf(string)}, kde argumentem je název zařízení. 
 
-Metoda \inlinecode{Build} následně zpracovává všechna zařízení ve frontě. Pokud obraz na zařízení je definován za pomoci Dockerfile, tak poté před vytvořením zařízení metoda \inlinecode{BuildImage} sestaví daný obraz. Metoda nejdříve zkontroluje, zdali daný obraz Dockerfilu již nevytvořila. Tuto kontrolu provádí tím, že při vytvoření si uloží hash zdrojového souboru do slovníku \inlinecode{imageTags}, kde hash souboru je klíčem a následně název vytvořeného obrazu je hodnotou ve slovníku. Po zajištění existence obrazu tedy metoda \inlinecode{BuildImage} vrátí název odpovídajícího obrazu. 
+Metoda \inlinecode{Build} následně zpracovává všechna zařízení ve frontě. Pokud obraz na zařízení je definován za pomoci Dockerfile, tak poté před vytvořením zařízení metoda \inlinecode{BuildImage} sestaví daný obraz. Metoda nejdříve zkontroluje, zdali daný obraz z Dockerfile již nevytvořila. Tuto kontrolu provádí tím, že při vytvoření si uloží hash zdrojového souboru do slovníku \inlinecode{imageTags}, kde hash souboru je klíčem a následně název vytvořeného obrazu je hodnotou ve slovníku. Po zajištění existence obrazu tedy metoda \inlinecode{BuildImage} vrátí název odpovídajícího obrazu. 
 
 Vytvoření samotného kontejneru je následně provedeno metodou \inlinecode{CreateContainer}. Ta dostane jako argument název zařízení, název obrazu, instanci nastavení zařízení a instanci nastavení sítě zařízení. 
 
 Každá kontejner je definovaný za pomoci rozraní \inlinecode{IVMContainer}, definovaného v sekci \ref{sec:cont_design}. Pomocí jeho metod je každý kontejner nastavován a realizace těchto nastavení je poté na dané implementaci rozhraní. V aktuální implementaci existují tyto dvě implementace kontejnerů: 
 
 \begin{itemize}
-    \item \inlinecode{DefaultContainer} - základní kontejner vycházející z operačního systému Ubuntu. Reprezentován je enumerátorem \inlinecode{ContainerType.DEFAULT} 
-    \item \inlinecode{NetworkLogger} - kontejner, který zajišťuje odposlouchávání sítě. Reprezentován je enumerátorem \inlinecode{ContainerType.NETWORK\_LOGGER}
+    \item \inlinecode{DefaultContainer} - základní kontejner vycházející z operačního systému Ubuntu. Reprezentován je hodnotou z výčtového typu \inlinecode{ContainerType.DEFAULT} 
+    \item \inlinecode{NetworkLogger} - kontejner, který zajišťuje odposlouchávání sítě. Reprezentován je hodnotou z výčtového typu \inlinecode{ContainerType.NETWORK\_LOGGER}
 \end{itemize}
 
-Oba dva typy kontejnerů jsou rozlišeny za pomoci enumerátoru \inlinecode{ContainerType}. Každá jeho hodnota by měla být napsána velkými písmeny. V konfiguračním souboru se následně preferuje verze s malými písmeny, i když jakákoliv kombinace velkých a malých písmen bude akceptována. 
+Oba dva typy kontejnerů jsou rozlišeny za pomoci výčtového typu \inlinecode{ContainerType}. Každá jeho hodnota by měla být napsána velkými písmeny. V konfiguračním souboru se následně preferuje verze s malými písmeny, i když jakákoliv kombinace velkých a malých písmen bude akceptována. 
 
-Následně rozšiřující statická metoda enumerátoru \inlinecode{GetInstance} dokáže vytvořit instanci daného typu kontejneru. Metoda zároveň obdrží argumenty pro konstruktor daného kontejneru. Hlavními argumenty jsou název kontejneru a název obrazu kontejneru. Kontejner typu \inlinecode{NetworkLogger} může ještě obdržet instanci třídy \inlinecode{ServiceConfiguration}, díky které obdrží nastavení testovací služby, ke které se následně připojí. 
+Následně rozšiřující statická metoda výčtového typu \inlinecode{GetInstance} dokáže vytvořit instanci daného typu kontejneru. Metoda zároveň obdrží argumenty pro konstruktor daného kontejneru. Hlavními argumenty jsou název kontejneru a název obrazu kontejneru. Kontejner typu \inlinecode{NetworkLogger} může ještě obdržet instanci třídy \inlinecode{ServiceConfiguration}, díky které obdrží nastavení testovací služby, ke které se následně připojí. 
 
 Metoda \inlinecode{CreateContainer} následně vrátí instanci kontejneru, která je následně uložena do slovníku \inlinecode{containers}, kde klíčem je název zařízení. 
 
@@ -168,7 +168,7 @@ Díky tomu může knihovna identifikovat jím vytvořené prostředky. Každý s
 
 \subsection{Definice kontejnerů}
 
-Jak jsem zmínil v sekci \ref{sec:cont_managment}, aktuálně testovací knihovna definuje dvě zařízení. Zařízení typu \inlinecode{default} je výchozím zařízením pro všechny aktuální kontejnery. Zařízení vychází z operačního systému Ubuntu 22.04\customtodo{citovat}. 
+Jak jsem zmínil v sekci \ref{sec:cont_managment}, aktuálně testovací knihovna definuje dvě zařízení. Zařízení typu \inlinecode{default} je výchozím zařízením pro všechny aktuální kontejnery. Zařízení vychází z operačního systému Ubuntu 22.04. 
 
 Ke správné orchestraci zařízení potřebuje kontejnerizované zařízení obsahovat potřebné nástroje k nastavení sítě. Všechny tyto nástroje jsou definované v novém obraze nazvaném \inlinecode{testlib-ubuntu-base}. Obraz obsahuje tyto balíčky:
 
@@ -211,7 +211,7 @@ Zaznamenávání sítě je ukončeno při obdržení zprávy o ukončení testu.
 
 \begin{figure}[htbp]
     \centering 
-    \includegraphics[width=\textwidth]{assets/img/activity_networklogger.pdf}
+    \includegraphics[width=0.95\textwidth]{assets/img/activity_networklogger.pdf}
     \caption{Aktivity diagram odposlouchávače komunikace}
     \label{fig:logger_activity}
 \end{figure}

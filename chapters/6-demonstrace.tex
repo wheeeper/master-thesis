@@ -38,7 +38,7 @@ Zároveň pro Docker Daemon, který je součástí Docker Desktop, musí být na
 
 Hlavní výhodou nové testovací knihovny je její flexibilita ve vytváření jednotlivých topologií ve virtualizovaném prostředí. Cílem tedy bylo navrhnout test, který by byl lehce škálovatelný a použitelný na všechny topologie. 
 
-Nejdříve ovšem pro komunikaci byl zvolen průmyslový protokol ModbusTCP. \customtodo{citovat modbus} Všechna komunikace mezi zařízeními tedy probíhat dle jeho specifikace. K úspěšné komunikaci tedy bude potřeba právě jeden server a alespoň jeden klient, který bude se serverem komunikovat. Test poté bude probíhat následovně:
+Nejdříve ovšem pro komunikaci byl zvolen průmyslový protokol ModbusTCP. Všechna komunikace mezi zařízeními tedy probíhat dle jeho specifikace. K úspěšné komunikaci tedy bude potřeba právě jeden server a alespoň jeden klient, který bude se serverem komunikovat. Test poté bude probíhat následovně:
 
 \begin{enumerate}
     \item Uvnitř testovacího prostředí bude běžet server, který bude přijímat komunikaci
@@ -54,9 +54,9 @@ Tento test je jednoduše škálovatelný na libovolný počet klientů. Každý 
 
 K tomuto slouží krok 2 a 7, kdy coil registr na adrese 0 slouží jako zámek. Pokud je tento registr úspěšně nastaven na hodnotu 1, tak poté pouze tento klient co tuto hodnotu nastavil může zapisovat do daných registrů. V opačném případě bude požadavek na zápis odmítnut.
 
-\section{Implementace testu}
+\section{Implementace testu}\label{sec:python_test_impl}
 
-Implementace testu vyžaduje implementaci dvou zařízení - serveru a klienta. Jazykem implementace pro obě zařízení byl zvolen jazyk Python. Obě zařízení budou pro komunikaci využívat knihovnu pyModbusTCP.\customtodo{citovat} Tato knihovna obsahuje implementaci námi požadovaného průmyslového protokolu ModbusTCP a to jak pro server, tak pro klienta.
+Implementace testu vyžaduje implementaci dvou zařízení - serveru a klienta. Jazykem implementace pro obě zařízení byl zvolen jazyk Python. Obě zařízení budou pro komunikaci využívat knihovnu pyModbusTCP. Tato knihovna obsahuje implementaci námi požadovaného průmyslového protokolu ModbusTCP a to jak pro server, tak pro klienta.
  
 \subsection{Server}
 
@@ -130,7 +130,29 @@ Díky podobné struktuře obou programů jsou všechny kontejnery skoro identick
 
 Tyto balíčky jsou nutnou součástí kontejneru a slouží ke spuštění dříve definovaných Python programů. Následně je vytvořena složka \inlinecode{app}, do které jsou nakopírovány všechny zdrojové soubory programu. Spolu s ní je vytvořena složka \inlinecode{packages}, do které jsou nakopírovány všechny balíčky ze stejnojmenné složky v kořenové složce programu. Tato složka slouží pro balíčky, které nebyly uveřejněny a tedy nejsou dostupné z veřejného repositáře.
 
-Po nakopírování všech souborů je vytvořeno virtuální Python prostředí. Za pomocí něj jsou poté nainstalovány všechny lokální balíčky ve složce packages, pokud nějaké existují. Poté jsou nainstalovány všechny balíčky obsažené v souboru \inlinecode{requirements.txt}. Ten obsahuje seznam všech potřebných balíčků ke spuštění programu, včetně těch, co nejsou veřejně dostupné. Pokud je možné program spustit bez argumentů, tak je do kontejneru i přidán příkaz na spuštění aplikace. Při použití v knihovně ovšem bude toto spuštění změněno. 
+Po nakopírování všech souborů je vytvořeno virtuální Python prostředí. Za pomocí něj jsou poté nainstalovány všechny lokální balíčky ve složce packages, pokud nějaké existují. Poté jsou nainstalovány všechny balíčky obsažené v souboru \inlinecode{requirements.txt}. Ten obsahuje seznam všech potřebných balíčků ke spuštění programu, včetně těch, co nejsou veřejně dostupné. Pokud je možné program spustit bez argumentů, tak je do kontejneru i přidán příkaz na spuštění aplikace. Při použití v knihovně ovšem bude toto spuštění změněno. Ukázku definice docker kontejneru můžeme vidět na výpise \ref{listing:dockerfile}
+
+\begin{listing}[htbp]
+    \centering
+    \begin{cminted}[breaklines,autogobble, fontsize=\footnotesize]{dockerfile}
+FROM wheeeper/testlib-ubuntu-base:22.04 AS base
+RUN apt-get update && apt-get upgrade -y
+RUN apt-get update && apt-get install -y python3.10 python3.10-venv
+WORKDIR /app
+COPY "src/" "/app/src"
+COPY ["main.py", "requirements.txt", "/app/"]
+
+RUN mkdir /packages
+COPY "./packages/" "/packages/"
+RUN python3.10 -m venv /opt/venv
+
+RUN /opt/venv/bin/pip install  /packages/** || true
+RUN /opt/venv/bin/pip install -r /app/requirements.txt 
+CMD ["/opt/venv/bin/python", "/app/main.py"]
+    \end{cminted}
+\caption{Ukázka definice kontejneru}
+\label{listing:dockerfile}
+\end{listing}
 
 \subsection{Definice virtualizovaného prostředí}
 

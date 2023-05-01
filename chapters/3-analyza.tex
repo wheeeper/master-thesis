@@ -115,3 +115,23 @@ Největší výhoda ovšem nastává v rozšířenosti softwaru Docker. Při poh
 Zároveň Podman je navrhnut primárně pro operační systém Linux. Jeho použití je sice na operačním systému možné, ale každý kontejner musí obsahovat hostující Linuxový systém. 
 
 Jak je tedy vidět, pro použití v testovací knihovně je vhodnější využití softwaru Docker. V aktuální podobě jeho použití přináší jasné benefity. 
+
+
+\section{Možnost propojení s reálnými zařízeními}
+
+Testovací knihovna ve své aktuální podobě podporuje propojení s reálnými zařízeními, na kterých běží implementace propojení s testovací službou. Propojení mezi zařízeními samotnými je teoreticky také možné, ovšem už není nijak kontrolováno či orchestrováno za pomoci testovací knihovny. 
+
+Vyvstává zde tedy otázka, zdali je teoreticky možné propojit jednotlivá virtualizovaná zařízení s reálnými zařízeními, která běží mimo zařízení, na kterém běží virtualizované prostředí. K tomu aby bylo možné toto analyzovat, předpokládejme dále využití softwaru Docker pro virtualizaci v testovací knihovně.
+
+\subsection{Analýza}
+
+Jednotlivé Docker kontejnery nemají ponětí o propojení s externí sítí, tedy sítí, mimo virtualizované prostředí. Kontejnery, pokud jsou připojeny k nějaké síti, mají pouze znalost o implicitní bráně, na kterou směrují všechnu komunikaci. Pokud kontejnery nejsou izolované, tak jsou takto schopné dosáhnout hostujícího stroje a tím i externí sítě. V komunikaci ve směru od virtualizovaného zařízení k reálnému zařízení by tedy neměl být problém. \cite{docker_brige_overview}
+
+Problém může ovšem nastav v opačném směru. Jednotlivé kontejnery v základním nastavení nejsou dostupné z externí sítě. Docker ovšem podporuje přesměrování portů. Tímto způsobem je možné namapovat port z virtualizovaného prostředí na port na hostujícím zařízení, na který je následně směřováno komunikace z externího zařízení. \cite{docker_ports}
+
+Vyvstává zde ale problém vznikající primárně z definice jednotlivých komunikačních protokolů. Tyto protokoly často běží na specifickém portu a tedy komunikace s více než jedním zařízením může způsobit kolizi těchto portů. To může zapříčinit neschopnost komunikace se všemi virtualizovanými zařízeními. 
+
+\subsection{Shrnutí}
+
+Jak z analýzy vyplívá, komunikace s reálnými zařízení je teoreticky možná. Ze specifika daného problému a protokolů využitých ke komunikaci ovšem nelze nyní komunikovat s externími zařízeními. K tomu aby byla komunikace možná, tak je potřeba nejdříve vyřešit problém kolize portů, pokud tedy nějaké řešení pro tento problém existuje. 
+
