@@ -1,6 +1,6 @@
 \chapter{Implementace}\label{chap:implementation}
 
-V této kapitole se budu věnovat implementaci navržených úprav z kapitoly \ref{chap:design}.
+Tato kapitola popisuje implementaci navržených úprav z kapitoly \ref{chap:design}.
 
 
 \section{Příprava stávající implementace testovací knihovny}
@@ -20,13 +20,37 @@ V předchozí implementaci nebylo potřeba žádné zařízení vytvářet exter
 
 S využitím \inlinecode{TestLib.Core} je tedy uživatel se připojit k testovací službě, která následně může ovládat testovací běh na zařízení. Tato implementace je skoro identická s implementací v jazyce \cpp. Nově zde přibyla i implementace v jazyce Python. Ta vznikla z důvodu pohodlnosti testerů, kteří mají velikou část testů napsanou právě v tomto jazyce. Pomoci ní budou schopni jednodušeji integrovat stávající testy do nové testovací knihovny. 
 
+\subsection{Úprava testovací služby}\label{sec:test_service_changes}
+
+S příchodem nové konfigurace virtualizovaného prostředí obdržela i konfigurace testovací služby novou konfiguraci. Konfigurační soubor testovací služby je tedy možné nyní definovat taktéž ve formátu YAML, místo formátu JSON. Konfigurační soubor obsahuje tyto konfigurační možnosti:
+
+\begin{description}
+    \item[ip] - IP, na kterém bude poslouchat testovací služba, výchozí hodnota je \inlinecode{127.0.0.1}
+    \item[port] - port, na kterém bude poslouchat testovací služba, výchozí hodnota je \inlinecode{1337}
+\end{description}
+
+
+Tento konfigurační soubor není již potřeba definovat, pokud jsou výchozí hodnoty dostatečné. V opačném případě lze v konfiguračním souboru definovat pouze ty hodnoty, které je potřeba změnit. 
+
+S novým konfiguračním souborem bylo i změněno, jak testovací služba obdrží tento konfigurační soubor. Nově testovací služba obdrží konfiguraci ve svém konstruktoru, místo toho aby ho získávala ze statické třídy \inlinecode{Global}. Nově také ve svém konstruktoru obdrží také konfiguraci virtualizovaného prostředí. Z této konfigurace následně získá počet očekáváných zařízení, které se k testovací službě připojí. 
+
+Testovací služba nově dle návrhu nemůže přidat žádné zařízení po dokončení inicializační fáze. Všechny metody, které toto umožňovali, byly odstraněny. Jediné zařízení, které je nyní odlišeno od ostatních zařízení, je odposlouchávač komunikace. Ten má MAC adresu \inlinecode{CA:FE:C0:FF:EE:00}, se kterou se identifikuje v první zprávě a díky tomu je možné ho rozeznat od ostatních zařízení. 
+
+Toto odlišení způsobuje ovšem pouze jednu věc. Testovací služba nyní odesílá zprávu o započetí první fáze testu jako první odposlouchávačům komunikace. Naopak při poslední fázi testu, odposlouchávačům komunikace je zpráva o započetí poslední fáze testu odeslána jako posledním. Je to z toho důvodu aby odposlouchávači byly schopni zaznamenat veškerou komunikace. 
+
+\subsection{Komunikace}
+
+Menší změny nastaly i v případě komunikace mezi testovací službou a účastníky testu. Nyní všechny zprávy jsou odesílány dle formátu big-endian. O převod na endianitu platformy se následně stará implementace zprávy, obsažena v třídě \inlinecode{Message}. 
+
+Nově také všechny funkce/metody, které zajišťovaly příjem zpráv, obsahují argument velikosti očekáváné zprávy. Díky tomu lze zprávy jednoduše oddělit a zpracovat je na správném místě bez nutnosti implementace vyrovnávací paměti.
 
 \section{Orchestrace virtualizovaného prostředí}
+
 Testovací knihovna k úspěšnému vytvoření potřebuje primárně umět tyto aktivity:
 
 \begin{enumerate}
     \item Umět komunikovat se softwarem Docker.
-    \item Vytvořit kontejnery, tedy virtualizované zařízení, dle konfigurace.
+    \item Vytvořit kontejnery, tedy virtualizovaná zařízení, dle konfigurace.
     \item Propojit všechna zařízení mezi sebou taktéž dle konfigurace.
 \end{enumerate}
 
@@ -76,9 +100,28 @@ Po vytvoření všech sítí metoda vypočítá statického směrovaní pro kaž
 
 Nejbližší cesta do dané sítě je zjišťována za pomoci algoritmu BFS, jenž je implementován ve stejnojmenné metodě. BFS, neboli Breadth first search, funguje na principu prohledávání do šířky. Algoritmus nejdříve obdrží informace o počátečním a konečném zařízení, tedy o uzlech, mezi kterými má nalézt cestu. 
 
-V počátku si algoritmus vytvoří frontu uzlů ke zpracování a seznam navštívených uzlů. Následně do fronty je vložen počáteční uzel a označen jako navštívený. Algoritmus následně ve smyčce skrz všechny položky fronty zkoumá jednotlivé uzly. Po vyjmutí prvního uzlu z fronty algoritmus zkoumá všechny jeho sousední uzly. Pokud sousední uzel ještě nebyl navštíven, tak poté je přidán na konec fronty. Po prozkoumání všech sousedních uzlů algoritmus pokračuje na další položku ve frontě. Součástí jednotlivých položek ve frontě je mimo informace o uzlu, který má být zpracován, také seznam uzlů, který reprezentuje cestu do daného uzlu k zpracování z počátečního uzlu. V případě, kdy uzel, který má být zpracován, je shodný s koncovým uzlem, tak je navrácen seznam uzlů reprezentující cestu do koncového uzlu. Pokud není nalezena cesta, tak poté metoda navrací prázdný seznam.
+V počátku si algoritmus vytvoří frontu uzlů ke zpracování a seznam navštívených uzlů. Následně do fronty je vložen počáteční uzel a označen jako navštívený. Algoritmus následně ve smyčce skrz všechny položky fronty zkoumá jednotlivé uzly. Po vyjmutí prvního uzlu z fronty algoritmus zkoumá všechny jeho sousední uzly. Pokud sousední uzel ještě nebyl navštíven, tak poté je přidán na konec fronty. Po prozkoumání všech sousedních uzlů algoritmus pokračuje na další položku ve frontě. Součástí jednotlivých položek ve frontě je mimo informace o uzlu, který má být zpracován, také seznam uzlů, který reprezentuje cestu do daného uzlu k zpracování z počátečního uzlu. V případě, kdy uzel, který má být zpracován, je shodný s koncovým uzlem, tak je navrácen seznam uzlů reprezentující cestu do koncového uzlu. Pokud není nalezena cesta, tak poté metoda navrací prázdný seznam. \cite{pruvodce_alogritmu}
 
-Pomocí tohoto algoritmu je tedy zjištěna nejkratší cesta do dané sítě. Tato cesta je nalezena v nejhorším případě v komplexitě $O(|V| + |E|)$, kde $|V|$ je počet uzlů, neboli kontejnerizovaných zařízení, a $|E|$ je počet hran mezi uzly, neboli spojení mezi zařízeními. Zároveň metoda pro každé zařízení může být volána maximálně $|V| - 1$ krát. Tyto vlastnosti jsou naprosto dostačující pro aktuální použití.\customtodo{Citovat bfs}
+Ukázkový běh algoritmu můžeme vidět na obrázku \ref{fig:bfs}. Na něm lze vidět jednotlivé iterace algoritmu, kde stav každého uzlu je označen těmito barvami:
+
+\begin{itemize}
+    \item Bílá - nezpracován
+    \item Zelená - aktuálně zpracováván
+    \item Oranžová - ve frontě ke zpracování
+    \item Šedá - zpracován
+\end{itemize}
+
+Jak je vidět, algoritmus postupně nachází všechny uzly od počátečního dokud nenalezne cílový uzel. 
+
+\begin{figure}[htbp]
+    \centering 
+    \includegraphics[width=\textwidth]{assets/img/bfs.pdf}
+    \caption{Běh algoritmu BFS}
+    \label{fig:bfs}
+\end{figure}
+
+
+Pomocí tohoto algoritmu je tedy zjištěna nejkratší cesta do dané sítě. Tato cesta je nalezena v nejhorším případě v komplexitě $O(|V| + |E|)$, kde $|V|$ je počet uzlů, neboli kontejnerizovaných zařízení, a $|E|$ je počet hran mezi uzly, neboli spojení mezi zařízeními. \cite{pruvodce_alogritmu} Zároveň metoda pro každé zařízení může být volána maximálně $|V| - 1$ krát. Tyto vlastnosti jsou naprosto dostačující pro aktuální použití.
 
 Metoda tedy navrací seznam zařízení, bez počátečního zařízení, který reprezentuje cestu od počátečního zařízení do cílového zařízení, neboli do dané sítě. Podstatnou informací je první položka v seznamu, tedy to sousední zařízení, kterému musí být zpráva odeslaná z daného zařízení, aby dosáhla cílového. To je nastaveno jako směr, kterým mají být všechny zprávy do dané sítě odesílány. Tímto způsobem implementace je testovací knihovna schopna nastavit všechny požadované topologie. Zároveň vždy odesílá zprávy nejkratší možnou cestou.
 
@@ -88,26 +131,26 @@ Stejně jako síť, i kontejnery mají svého správce, realizovaného třídou 
 
 Po přidání všech zařízení je možné zavolat metodu \inlinecode{Build}. Ta očekává jako argument instanci třídy \inlinecode{NetworkManager}, která již má vypočítané nastavení sítě daných zařízení. Nastavení pro jednotlivé zařízení jsou získávána za pomoci metody \inlinecode{NetworkManager.GetContainerConf(string)}, kde argumentem je název zařízení. 
 
-Metoda \inlinecode{Build} následně zpracovává všechna zařízení ve frontě. Pokud obraz na zařízení je definován za pomoci Dockerfile, tak poté před vytvořením zařízení metoda \inlinecode{BuildImage} sestaví daný obraz. Metoda nejdříve zkontroluje, zdali daný obraz Dockerfilu již nevytvořila. Tuto kontrolu provádí tím, že při vytvoření si uloží hash zdrojového souboru do slovníku \inlinecode{imageTags}, kde hash souboru je klíčem a následně název vytvořeného obrazu je hodnotou ve slovníku. Po zajištění existence obrazu tedy metoda \inlinecode{BuildImage} vrátí název odpovídajícího obrazu. 
+Metoda \inlinecode{Build} následně zpracovává všechna zařízení ve frontě. Pokud obraz na zařízení je definován za pomoci Dockerfile, tak poté před vytvořením zařízení metoda \inlinecode{BuildImage} sestaví daný obraz. Metoda nejdříve zkontroluje, zdali daný obraz z Dockerfile již nevytvořila. Tuto kontrolu provádí tím, že při vytvoření si uloží hash zdrojového souboru do slovníku \inlinecode{imageTags}, kde hash souboru je klíčem a následně název vytvořeného obrazu je hodnotou ve slovníku. Po zajištění existence obrazu tedy metoda \inlinecode{BuildImage} vrátí název odpovídajícího obrazu. 
 
 Vytvoření samotného kontejneru je následně provedeno metodou \inlinecode{CreateContainer}. Ta dostane jako argument název zařízení, název obrazu, instanci nastavení zařízení a instanci nastavení sítě zařízení. 
 
-Každá kontejner je definovaný za pomoci rozraní \inlinecode{IVMContainer}, definovaného v sekci \label{sec:cont_design}. Pomocí jeho metod je každý kontejner nastavován a realizace těchto nastavení je poté na dané implementaci rozhraní. V aktuální implementaci existují tyto dvě implementace kontejnerů: 
+Každá kontejner je definovaný za pomoci rozraní \inlinecode{IVMContainer}, definovaného v sekci \ref{sec:cont_design}. Pomocí jeho metod je každý kontejner nastavován a realizace těchto nastavení je poté na dané implementaci rozhraní. V aktuální implementaci existují tyto dvě implementace kontejnerů: 
 
 \begin{itemize}
-    \item \inlinecode{DefaultContainer} - základní kontejner vycházející z operačního systému Ubuntu. Reprezentován je enumerátorem \inlinecode{ContainerType.DEFAULT} 
-    \item \inlinecode{NetworkLogger} - kontejner, který zajišťuje odposlouchávání sítě. Reprezentován je enumerátorem \inlinecode{ContainerType.NETWORK\_LOGGER}
+    \item \inlinecode{DefaultContainer} - základní kontejner vycházející z operačního systému Ubuntu. Reprezentován je hodnotou z výčtového typu \inlinecode{ContainerType.DEFAULT} 
+    \item \inlinecode{NetworkLogger} - kontejner, který zajišťuje odposlouchávání sítě. Reprezentován je hodnotou z výčtového typu \inlinecode{ContainerType.NETWORK\_LOGGER}
 \end{itemize}
 
-Oba dva typy kontejnerů jsou rozlišeny za pomoci enumerátoru \inlinecode{ContainerType}. Každá jeho hodnota by měla být napsána velkými písmeny. V konfiguračním souboru se následně preferuje verze s malými písmeny, i když jakákoliv kombinace velkých a malých písmen bude akceptována. 
+Oba dva typy kontejnerů jsou rozlišeny za pomoci výčtového typu \inlinecode{ContainerType}. Každá jeho hodnota by měla být napsána velkými písmeny. V konfiguračním souboru se následně preferuje verze s malými písmeny, i když jakákoliv kombinace velkých a malých písmen bude akceptována. 
 
-Následně rozšiřující statická metoda enumerátoru \inlinecode{GetInstance} dokáže vytvořit instanci daného typu kontejneru. Metoda zároveň obdrží argumenty pro konstruktor daného kontejneru. Hlavními argumenty jsou název kontejneru a název obrazu kontejneru. Kontejner typu \inlinecode{NetworkLogger} může ještě obdržet instanci třídy \inlinecode{ServiceConfiguration}, díky které obdrží nastavení testovací služby, ke které se následně připojí. 
+Následně rozšiřující statická metoda výčtového typu \inlinecode{GetInstance} dokáže vytvořit instanci daného typu kontejneru. Metoda zároveň obdrží argumenty pro konstruktor daného kontejneru. Hlavními argumenty jsou název kontejneru a název obrazu kontejneru. Kontejner typu \inlinecode{NetworkLogger} může ještě obdržet instanci třídy \inlinecode{ServiceConfiguration}, díky které obdrží nastavení testovací služby, ke které se následně připojí. 
 
 Metoda \inlinecode{CreateContainer} následně vrátí instanci kontejneru, která je následně uložena do slovníku \inlinecode{containers}, kde klíčem je název zařízení. 
 
 \subsection{Správce celého virtualizovaného prostředí}
 
-Předchozí zmíněné správce je potřebo orchestrovat společně. K tomuto slouží třída \inlinecode{VirtualEnvironmentManager}. Třída obdrží instanci \inlinecode{EnvironmentConfiguration}, která reprezentuje nastavení virtualizovaného prostředí definovaného v sekci \ref{sec:design_virt}. Následně také obdrží instanci třídy \inlinecode{ServiceConfiguration}, ve které je obsaženo nastavení testovací služby.
+Předchozí zmíněné správce je potřeba orchestrovat společně. K tomuto slouží třída \inlinecode{VirtualEnvironmentManager}. Třída obdrží instanci \inlinecode{EnvironmentConfiguration}, která reprezentuje nastavení virtualizovaného prostředí definovaného v sekci \ref{sec:env_conf}. Následně také obdrží instanci třídy \inlinecode{ServiceConfiguration}, ve které je obsaženo nastavení testovací služby.
 
 Třída v sobě obsahuje instance obou dvou správců \inlinecode{NetworkManager} a \inlinecode{ContainerManager}. V konstruktoru je zavolána metoda \inlinecode{SetupEnvironment}, která zaregistruje všechny zařízení a připojení mezi nimi. Zároveň, pokud dle nastavení je potřeba zachytávat na daném spojení komunikaci, tak také přidá adekvátně dané odposlouchávače komunikace. 
 
@@ -119,17 +162,26 @@ Za pomoci metody \inlinecode{Stop} je poté následně možné zastavit všechny
 
 Implementace virtualizovaného prostředí ošetřuje všechny chyby tím, že v případě jejich vzniku vyhodí odpovídající výjimku. Je tedy potřeba následně tyto chyby v případě jejich vzniku zachytávat a adekvátně vyhodnotit.
 
-Ovšem, pokud je program násilně ukončen, tak může dojít k nesmazaní daných vytvořených prostředků v Docker prostředí. To může způsobit jejich akumulaci a v případě sítě dokonce selhání vytvoření sítě. Testovací knihovna proto definuje ve statické třídě \inlinecode{TestLibConstants} proměnnou \inlinecode{ResourcePrefix}, který je přidán ke všem vytvořeným prostředkům.
+Ovšem pokud je program násilně ukončen, tak může dojít k nesmazaní daných vytvořených prostředků v Docker prostředí. To může způsobit jejich akumulaci a v případě sítě dokonce selhání vytvoření sítě. Testovací knihovna proto definuje ve statické třídě \inlinecode{TestLibConstants} proměnnou \inlinecode{ResourcePrefix}, který je přidán ke všem vytvořeným prostředkům.
 
 Díky tomu může knihovna identifikovat jím vytvořené prostředky. Každý správce má tedy implementovanou metodu pro odstranění zbylých prostředků. Ty jsou volány prostřednictvím metody \inlinecode{RemoveHangingResources} v konstruktoru správce virtualizovaného prostředí před započetím všech akcí k vytvoření nového prostředí.
 
 \subsection{Definice kontejnerů}
 
-Jak jsem již řekl v sekci \ref{sec:cont_managment}, tak aktuálně testovací knihovna definuje dvě zařízení. Zařízení typu \inlinecode{default} je výchozím zařízením pro všechny aktuální kontejnery. Zařízení vychází z operačního systému Ubuntu 22.04\customtodo{citovat}. 
+Jak jsem zmínil v sekci \ref{sec:cont_managment}, aktuálně testovací knihovna definuje dvě zařízení. Zařízení typu \inlinecode{default} je výchozím zařízením pro všechny aktuální kontejnery. Zařízení vychází z operačního systému Ubuntu 22.04. 
 
-K správné orchestraci zařízení potřebuje kontejnerizované zařízení obsahovat potřebné nástroje k nastavení sítě. Všechny tyto nástroje jsou definované v novém obraze názvaném \inlinecode{testlib-ubuntu-base}. Tím pádem všechny kontejnery, které budou vycházet z tohoto obrazu, bude možné použít v testovací knihovně. 
+Ke správné orchestraci zařízení potřebuje kontejnerizované zařízení obsahovat potřebné nástroje k nastavení sítě. Všechny tyto nástroje jsou definované v novém obraze nazvaném \inlinecode{testlib-ubuntu-base}. Obraz obsahuje tyto balíčky:
 
-Tento obraz následně může být distribuován, ať už do veřejného, nebo soukromého repositáře. Označení verze obrazu bude kopírovat označení podkladového obrazu operačního systému Ubuntu. Tedy, verze bude stejná, jako verze operačního systému Ubuntu. 
+\begin{itemize}
+    \item \inlinecode{net-tools}
+    \item \inlinecode{iproute2}
+\end{itemize}
+
+Všechny kontejnery, které budou vycházet z tohoto obrazu, bude možné použít v testovací knihovně. Tento obraz byl zveřejněn ve veřejném repositáři na Docker Hub\cite{docker_hub}, kde je dostupný pod názvem \inlinecode{wheeeper/testlib-ubuntu-base}.
+
+Označení verze obrazu bude kopírovat označení podkladového obrazu operačního systému Ubuntu. Tedy verze bude stejná jako verze operačního systému Ubuntu. 
+
+Následná definice kontejnerů v konfiguračním souboru virtualizovaného prostředí bude probíhat dle definice v \ref{sec:env_conf}. Je ovšem potřeba zajistit, že všechny cesty v konfiguraci budou pro program dostupné, či validní. V případě relativních cest uvnitř konfiguračního souboru bude knihovna pokládat umístění konfiguračního souboru jako výchozí bod pro dané relativní cesty.
 
 \subsection{Odposlouchávání komunikace}
 
@@ -144,7 +196,7 @@ Program přijímá variabilní počet argumentů v závislosti na módu fungová
 
 K aktivaci prvního módu je potřeba předat programu přepínač \inlinecode{--no-service}, který mód aktivuje. Následně program očekává seznam názvů rozhraní, oddělených mezerou, ze kterých má zachytávat komunikaci. Při spuštění program zachytává všechnu komunikaci na daných rozhraní a následně vypisuje jednotlivé zachycené zprávy na standardní výstup.
 
-V druhém módu testovací knihovna očekává tyto poziční argumenty:
+V druhém implicitně definovaném módu testovací knihovna očekává tyto poziční argumenty:
 
 \begin{enumerate}
     \item Složku, kde bude ukládat zachycené zprávy do souboru.
@@ -153,17 +205,25 @@ V druhém módu testovací knihovna očekává tyto poziční argumenty:
     \item Variabilní počet jmen rozhraní, které má zaznamenávat, oddělený mezerou.
 \end{enumerate}
 
-Po obdržení těchto argumentů se program připojí k testovací službě a projde stejnou inicializační fází, jako všichni ostatní účastníci testu. Následně po obdržení zprávy o započnutí testu započnuto zaznamenávání sítě. Symetricky, zaznamenávání sítě je ukončeno při obdržení zprávy o ukončení testu. Jednotlivé testy jsou tedy zaznamenávány separátně a pro každý test je vytvořen separátní záznam, rozlišen identifikátorem testu.
+Ilustraci úspěšného běhu s jedním testem můžeme vidět na diagramu aktivit, který je na obrázku \ref{fig:logger_activity}. Jak je vidět, po obdržení argumentů se program připojí k testovací službě a projde stejnou inicializační fází, jako všichni ostatní účastníci testu. Následně po obdržení zprávy o započnutí testu začne zaznamenávat síť. Program využívá separátních vláken pro záznam komunikace a pro zpracovaní jednotlivých paketů. Díky tomuto přístupu není omezen výkon zaznamenávání například zápisem do souboru. Všechny přijaté pakety mohou být tedy ihned zapsány. 
 
-Program má definovaný Dockerfile, vycházející z definovaného obrazu \inlinecode{testlib-ubuntu-base}, na základě něhož může být program spuštěn ve virtualizovaném prostředí prostřednictvím softwaru Docker. To je přímo podporováno od Visual Studia 2022\cite{vs2022}, ve kterém jsou všechny projekty tvořeny. Při otevření projektu je vytvořen Docker kontejner, ve kterém se dá projekt následně spouštět a i ladit.
+Zaznamenávání sítě je ukončeno při obdržení zprávy o ukončení testu. Jednotlivé testy jsou tedy zaznamenávány separátně a pro každý test je vytvořen separátní záznam, rozlišen identifikátorem testu. Zároveň je ovšem kontrolována kolize záznamů a jméno výstupního souboru je v případě kolize upraveno. 
 
-Za pomocí Visual Studia 2022 lze také uveřejnit daný program do Docker repositáře. Po vybrání \inlinecode{Publish} je možné program zveřejnit buď do veřejného Docker repositáře, nebo do soukromě hostovaného repositáře.
+\begin{figure}[htbp]
+    \centering 
+    \includegraphics[width=0.95\textwidth]{assets/img/activity_networklogger.pdf}
+    \caption{Aktivity diagram odposlouchávače komunikace}
+    \label{fig:logger_activity}
+\end{figure}
 
-Zveřejněný program, neboli obraz, v základu spouští program v módu bez připojení k testovací službě. To lze při vytváření kontejneru změnit a tedy program správně nastavit. 
+Program má definovaný Dockerfile, vycházející z definovaného obrazu \inlinecode{testlib-ubuntu-base}, na základě něhož může být program spuštěn ve virtualizovaném prostředí prostřednictvím softwaru Docker. Ten je oproti původnímu prostředí rozšířen o dvě komponenty:
 
-\section{Úprava testovací služby}
+\begin{itemize}
+    \item \inlinecode{dotnet-runtime-6.0} - vše potřebné ke spuštění .NET 6 programu v Ubuntu
+    \item \inlinecode{libpcap-dev} - knihovna k zaznamenávání packetů 
+\end{itemize}
 
-\note{Některé věci je ještě potřeba dodělat, aby to bylo konzistentní, dopíšu potom}
+Obraz také využívá obraz \inlinecode{mcr.microsoft.com/dotnet/sdk:6.0}, s pomocí než je celý program zkompilován. V základním nastavení je program spuštěn v módu bez připojení k testovací službě. To lze při vytváření kontejneru změnit a tedy program správně nastavit. Daný vytvořený obraz byl zveřejněn ve veřejném repositáři na Docker Hub\cite{docker_hub} a je dostupný pod názvem \inlinecode{wheeeper/networklogger}.
 
 \section{Integrace virtualizovaného prostředí do testovací knihovny}
 
@@ -173,6 +233,6 @@ Do statické třídy \inlinecode{API} byla přidána statická metoda \inlinecod
 
 Použití této funkce je zamýšleno v rámci jednotlivých tříd testů. Testovací knihovna používá knihovnu MSTest pro propojení se serverem Azure DevOps, který může automaticky spouštět jednotlivé testy. Všechny testy musí být shlukovány do jednotlivých testovacích tříd. Testovací knihovna MSTest definuje atribut \inlinecode{ClassInitialize}. Metoda s tímto atributem bude spouštěna právě jednou před započetím testů v dané třídě. Je tedy logické shlukovat jednotlivé testy dle konfigurace virtualizovaného prostředí. Tímto použitím se minimalizuje riziko zbytečného přestavování virtualizovaného prostředí. 
 
-Třída \inlinecode{API} také nově definuje metodu \inlinecode{SetServiceConfig}, díky které může být změněno základní nastavení testovací služby. 
+Třída \inlinecode{API} také nově definuje metodu \inlinecode{SetServiceConfig}, díky které může být změněno základní nastavení testovací služby, jenž je popsáno v sekci \ref{sec:test_service_changes}.
 
 
