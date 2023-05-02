@@ -1,6 +1,6 @@
 \chapter{Zhodnocení testovací knihovny}\label{chap:review}
 
-Vytvořená testovací knihovna splňuje požadavky a cíle, které na ní byly kladeny a které byly stanoveny v kapitole \ref{chap:cil}. Vyvstává zde ovšem otázka jak efektivní je toto řešení. V následujících sekcích je tedy vytvořené řešení zhodnocena na základě několika kritérií.
+Vytvořená testovací knihovna splňuje požadavky a cíle, které na ní byly kladeny, a které byly stanoveny v kapitole \ref{chap:cil}. Vyvstává zde ovšem otázka, jak efektivní je toto řešení. V následujících sekcích je tedy vytvořené řešení zhodnoceno na základě několika kritérií.
 
 \section{Kategorie hodnocení}
 
@@ -23,11 +23,11 @@ Vytvořená testovací knihovna bude zhodnocena na základě těchto kategorií:
 
 
 \section{Flexibilita a možnosti použití knihovny}
-Nová testovací knihovna lze využít pro jakékoliv testy, které vyžadují propojení zařízení, neboli kontejnerů, mezi sebou. Díky její implementaci je možné testy implementovat s libovolným počtem zařízení v různých topologiích.
+Nová testovací knihovna může být využita pro jakékoliv testy, které vyžadují propojení zařízení, neboli kontejnerů, mezi sebou. Díky její implementaci je možné testy implementovat s libovolným počtem zařízení v různých topologiích.
 
 Knihovna v aktuální podobě podporuje zařízení, které vychází z operačního systému Ubuntu. Tato podpora může být širší, protože závislost na systému Ubuntu je pouze na ty nástroje, které umožňují nastavení sítě na zařízení. Seznam kompatibilních systému ovšem zkoumám nebyl. Je zřejmé, že toto snižuje flexibilitu knihovny. Zároveň ovšem není náročné přidat další implementace pro jiné operační systémy. 
 
-Prostor ke zlepšení je i v registraci testů. Jednotlivé testy jsou registrovány za pomoci výčtových typů, kde každý test je poté identifikován je číselnou hodnotou. Ideálním cílem je, aby všechny testové identifikátory byly definovány na jednom místě. V předchozí implementaci, která podporovala jazyky \csharp\,a\,\cpp\, bylo řešením tohoto problému jeden společný zdrojový soubor, díky čemuž byl problém vyřešen. S příchodem podpory jazyku Python to ale aktuálně není možné. Do budoucna je tedy vhodné investigovat způsob, kterým by byl tento problém vyřešen.
+Prostor ke zlepšení je i v registraci testů. Jednotlivé testy jsou registrovány za pomoci výčtových typů, kde každý test je poté identifikován číselnou hodnotou. Ideálním cílem je, aby všechny testové identifikátory byly definovány na jednom místě. V předchozí implementaci, jež podporovala jazyky \csharp\,a\,\cpp\, byl řešením tohoto problému jeden společný zdrojový soubor, díky čemuž byl problém vyřešen. S příchodem podpory jazyku Python to ale aktuálně není možné. Do budoucna je tedy vhodné investigovat způsob, kterým by byl tento problém vyřešen.
 
 \section{Výkon virtualizované sítě}
 
@@ -47,9 +47,9 @@ Součástí testu měření výkonu budou tito tři participanti:
     \item Zařízení pro vyplnění místa
 \end{itemize}
 
-Implementace těchto zařízení je velice podobná implementaci zařízení pro test s protokolem ModbusTCP v sekci \ref{sec:python_test_impl}. Návrh serveru a klient je totožný až na záměnu ModbusTCP serveru a klient na server a klient nástroje iPerf3. Pro nastavení parametrů testu je využito základních hodnot, které jsou nastaveny v nástroji iPerf. Jediná změněná hodnota byla délka testu, která byla nastavena na 60 sekund. Jednotlivé definice kontejnerů byly rozšířeny o balíček \inlinecode{libiperf-dev}, který obsahuje implementaci nástroje iPerf3. 
+Implementace těchto zařízení je velice podobná implementaci zařízení pro test s protokolem ModbusTCP v sekci \ref{sec:python_test_impl}. Návrh serveru a klient jsou totožné, až na záměnu ModbusTCP serveru a klient na server a klient nástroje iPerf3. Pro nastavení parametrů testu je využito základních hodnot, které jsou nastaveny v nástroji iPerf. Jediná změněná hodnota byla délka testu, která byla nastavena na 60 sekund. Jednotlivé definice kontejnerů byly rozšířeny o balíček \inlinecode{libiperf-dev}, který obsahuje implementaci nástroje iPerf3. 
 
-Nově ovšem přibylo zařízení pro vyplnění místa. Toto zařízení je aktivně připojené k testovací službě, jeho úkolem ovšem není provádět žádné testování. Zařízení na všechny požadavky o testování odpovídá kladně, i když sám žádné akce neprovádí. Jeho cílem je být výplní mezi serverem a klientem pro simulaci topologií a tím vzdálenosti mezi nimi. K tomuto úkolu by bylo možné použít jakékoliv zařízení, ovšem díky tomu, že zařízení bude aktivně připojeno k testovací službě se významně zrychlí orchestrace virtualizovaného prostředí a tím celého testování.
+Nově ovšem přibylo zařízení pro vyplnění místa. Toto zařízení je aktivně připojené k testovací službě, jeho úkolem ovšem není provádět žádné testování. Zařízení na všechny požadavky o testování odpovídá kladně, i když sám žádné akce neprovádí. Jeho cílem je být výplní mezi serverem a klientem pro simulaci topologií a tím vzdálenosti mezi nimi. K tomuto úkolu by bylo možné použít jakékoliv zařízení, ovšem díky tomu, že zařízení bude aktivně připojeno k testovací službě, se významně zrychlí orchestrace virtualizovaného prostředí a tím celého testování.
 
 
 \subsection{Testované topologie}
@@ -60,7 +60,7 @@ V následujících testech bude tedy 11 topologií, které budou pod označením
 
 \subsection{Výsledek testu a měření}
 
-Výsledky z testů lze vidět na grafech níže. Jak lze vidět na grafu \ref{fig:graph_send_speed}, respektive \ref{fig:graph_receive_speed}, které znázorňují dosáhnutou rychlost přenosu dat v MB/s, tak při zvětšující se vzdáleností mezi klientem a serverem se snižuje rychlost přenosu. Nejnižší dosáhnutou rychlostí byla rychlost 990 MB/s. Tato rychlost je naprosto dostačující pro použití při testování. Na předem zmíněných grafech také můžeme vidět, že rychlost je symetrická. Daný procento počtu opakování přenosu se pohybuje mezi hodnotou 0.5 \% a 2.5 \%, což je akceptovatelné rozmezí pro využití knihovny.
+Výsledky z testů lze vidět na grafech níže. Jak lze vidět na grafu \ref{fig:graph_send_speed}, respektive \ref{fig:graph_receive_speed}, které znázorňují dosaženou rychlost přenosu dat v MB/s, tak při zvětšující se vzdáleností mezi klientem a serverem se snižuje rychlost přenosu. Nejnižší dosaženou rychlostí byla rychlost 990 MB/s. Tato rychlost je naprosto dostačující pro použití při testování. Na předem zmíněných grafech také můžeme vidět, že rychlost je symetrická. Dané procento počtu opakování přenosu se pohybuje mezi hodnotou 0.5 \% a 2.5 \%, což je akceptovatelné rozmezí pro využití knihovny.
 
 \begin{figure}[htbp]
     \centering 
@@ -86,13 +86,13 @@ Výsledky z testů lze vidět na grafech níže. Jak lze vidět na grafu \ref{fi
 
 \section{Rychlost a efektivnost vytváření virtualizovaného prostředí}
 
-K změření rychlosti vytváření virtualizované sítě byl využit stejný test, který byl definován v předchozí sekci. Při orchestraci tohoto testu bylo změřena doba potřebná doba k vytvoření virtualizovaného prostředí a doba potřebná k destrukci vytvořeného virtualizovaného prostředí. 
+K změření rychlosti vytváření virtualizované sítě byl využit stejný test, jenž byl definován v předchozí sekci. Při orchestraci tohoto testu byla změřena doba potřebná k vytvoření virtualizovaného prostředí a doba potřebná k destrukci vytvořeného virtualizovaného prostředí. 
 
-Naměřená dobu potřebnou k vytvoření virtualizovaného prostředí můžeme vidět na grafu \ref{fig:graph_create}. Jak je vidět, čas potřebný k vytvoření virtualizovaného prostředí roste lineárně. Je zde ale dobré přiblížit co se vlastně v tomto celém procesu děje. Tento test byl při vytváření prostředí schopen využít optimalizace, díky které je zabráněno opakovanému sestavování jednoho obrazu. Při každém vytváření virtualizovaného prostředí bylo nutné sestavit maximálně tři obrazy. Velikou část zabere vytváření sítě, respektive získávání informací o aktuálním stavu sítí ve virtualizovaném prostředí. Toto bylo vytvořeno s původní ideou, kdy na jednom stroji by mohlo běžet více instancí knihovny. Do budoucna by tedy bylo vhodné stav sítě ukládat a dotaz na stav sítě provádět pouze v případě chyby, kdy daný rozsah by byl zabrán. Zároveň zde může pomoct i optimalizace, kdy seznam již sestavených obrazů bude ukládán po celou dobu běhu testovací knihovny.
+Naměřenou dobu potřebnou k vytvoření virtualizovaného prostředí můžeme vidět na grafu \ref{fig:graph_create}. Jak je vidět, čas potřebný k vytvoření virtualizovaného prostředí roste lineárně. Je zde ale dobré přiblížit, co se vlastně v tomto celém procesu děje. Tento test byl při vytváření prostředí schopen využít optimalizace, díky které je zabráněno opakovanému sestavování jednoho obrazu. Při každém vytváření virtualizovaného prostředí bylo nutné sestavit maximálně tři obrazy. Velikou část zabere vytváření sítě, respektive získávání informací o aktuálním stavu sítí ve virtualizovaném prostředí. Toto bylo vytvořeno s původní ideou, kdy by na jednom stroji mohlo běžet více instancí knihovny. Do budoucna by tedy bylo vhodné stav sítě ukládat a dotaz na stav sítě provádět pouze v případě chyby, kdy daný rozsah by byl zabrán. Zároveň zde může pomoci i optimalizace, kdy seznam již sestavených obrazů bude ukládán po celou dobu běhu testovací knihovny.
 
 Čas potřebný k destrukci vytvořeného virtualizovaného prostředí lze vidět na obrázku \ref{fig:graph_remove}. Do tohoto času je zahrnuto odeslání zprávy od testovací služby o ukončení testování, které následně vede k ukončení daných zařízení, ukončení testovací služby a následně odstranění vytvořeného virtualizovaného prostředí. Z naměřených dat nelze vyvodit žádnou závislost na počtu vytvořených zařízení. Lze ovšem říci, že destrukce vytvořeného virtualizovaného prostředí v průměru trvala 19346.8 ms. 
 
-Je ovšem vhodné podotknout, že čím více zařízení není ukončeno s pomocí testovací služby, tím víc narůstá čas potřebný k odstranění vytvořeného virtualizovaného prostředí. Tento nárůst vzniká primárně z časového limitu na nenásilné ukončení, na které software Docker čeká u každého kontejneru. Do budoucna je tedy vhodné investigovat jak odstranit tento časový limit, jelikož při použití GUI aplikace tento časový limit není přítomný. Při tomto testu bylo potřeba násilně ukončit pouze jedno zařízení.
+Je ovšem vhodné podotknout, že čím více zařízení není ukončeno s pomocí testovací služby, tím víc narůstá čas potřebný k odstranění vytvořeného virtualizovaného prostředí. Tento nárůst vzniká primárně z časového limitu na nenásilné ukončení, na které software Docker čeká u každého kontejneru. Do budoucna je tedy vhodné investigovat, jak odstranit tento časový limit, jelikož při použití GUI aplikace tento časový limit není přítomný. Při tomto testu bylo potřeba násilně ukončit pouze jedno zařízení.
 
 \begin{figure}[htbp]
     \centering 
@@ -113,6 +113,6 @@ Je ovšem vhodné podotknout, že čím více zařízení není ukončeno s pomo
 
 \section{Shrnutí}
 
-Dle naměřených hodnot vytvořená testovací knihovna výkonnostně a ergonomicky splňuje podmínka na ni kladené. Je zde ovšem stále prostor pro zlepšení. Z výkonnostního hlediska byly jasně definovány nedostatky ve vytváření a destrukci virtualizovaného prostředí, jejímž odstraněním se může zrychlit celý proces orchestrace virtualizovaného prostředí. Menší nedostatky byly nalezeny i v rámci použití samotné knihovny. Vyřešení těchto nedostatků ovšem nepřináší až tak vysoké benefity.
+Dle naměřených hodnot vytvořená testovací knihovna výkonnostně a ergonomicky splňuje podmínky na ni kladené. Je zde ovšem stále prostor pro zlepšení. Z výkonnostního hlediska byly jasně definovány nedostatky ve vytváření a destrukci virtualizovaného prostředí, jejichž odstraněním se může zrychlit celý proces orchestrace virtualizovaného prostředí. Menší nedostatky byly nalezeny i v rámci použití samotné knihovny. Vyřešení těchto nedostatků ovšem nepřináší až tak vysoké benefity.
 
 
