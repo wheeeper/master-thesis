@@ -93,7 +93,7 @@ Virtualizace na úrovni programovacího jazyka probíhá v rámci aplikační vr
 
 \subsubsection{Virtualizace na úrovni knihoven}
 
-Virtualizace na úrovni knihoven může připomínat předchozí popsanou virtualizaci, ovšem důležitá je změna původu této implementace. Každá aplikace využívá volání různých externích zdrojů. Tyto zdroje mohou a nemusí být přenositelné mezi operačními systémy. Virtualizace na této úrovni využívá rozhraní daných externích zdrojů, ovšem implementace je přizpůsobena tomu stroji, na kterém aplikace běží. Jako příklad mohu uvést například Wine, který implementuje Windows API v UNIX prostředí. 
+Virtualizace na úrovni knihoven může připomínat předchozí popsanou virtualizaci, ovšem důležitá je změna původu této implementace. Každá aplikace využívá volání různých externích zdrojů. Tyto zdroje mohou a nemusí být přenositelné mezi operačními systémy. Virtualizace na této úrovni využívá rozhraní daných externích zdrojů, ovšem implementace je přizpůsobena tomu stroji, na kterém aplikace běží. Jako příklad lze uvést například Wine, který implementuje Windows API v UNIX prostředí. 
 
 
 \subsection{Virtualizační techniky}
@@ -172,7 +172,7 @@ QEMU je emulátor, který využívá dynamického binárního překladu. Tento n
 
 Za pomoci prvního módu je QEMU schopno spustit aplikaci, která byla zkompilována pro jeden procesor na jiném procesoru. V druhém emuluje celý hostovaný systém. QEMU podporuje velikou řadu procesorových architektur, jako například x86 nebo ARM. 
 
-QEMU funguje tak, že za běhu překládá instrukce do tvaru, který vyžaduje hostující systém. Hlavní ideou je, že každá instrukce je rozdělaná na několik jednodušších instrukcí, které se nazývají \textit{micro operations}, neboli česky mikro operace. Každá tato zjednodušená instrukce je implementována kusem kódu napsaném v jazyce C a následně zkompilována. 
+QEMU funguje tak, že za běhu překládá instrukce do tvaru, který vyžaduje hostující systém. Hlavní ideou je, že každá instrukce je rozdělená na několik jednodušších instrukcí, které se nazývají \textit{micro operations}, neboli česky mikro operace. Každá tato zjednodušená instrukce je implementována kusem kódu napsaném v jazyce C a následně zkompilována. 
 
 Výstupní objektový soubor je následně použit jako vstup pro vytvoření dynamického generátoru kódu. Ten je následně spuštěn a spojením několika mikro operací dokáže vygenerovat plnohodnotnou instrukci pro hostitelský stroj.\cite{chiueh2005survey}\cite{bellard2005qemu}
 

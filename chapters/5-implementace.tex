@@ -56,15 +56,15 @@ Testovací knihovna k úspěšnému vytvoření potřebuje umět primárně tyto
 
 \subsection{Komunikace se softwarem Docker}
 Orchestrace virtualizovaného prostředí má dle návrhu probíhat s pomocí softwaru Docker. 
-Jako první tedy bylo potřeba integrovat komunikaci se softwarem Docker do testovací knihovny. Před vytvořením vlastní integrace jsem se ovšem jako první porozhlédnul po dostupných komunitních knihovnách, které už toto připojení integrují, zda některá z nich není vhodná pro použití v testovací knihovně. 
+Jako první tedy bylo potřeba integrovat komunikaci se softwarem Docker do testovací knihovny. Před vytvořením vlastní integrace je ale rozumné se nejdříve porozhlédnout, zda nějaká již z existujících integrací není vhodná k použití v testovací knihovně. 
 
-Testovací knihovna je sepsána v jazyce \csharp, proto jsem tedy primárně vyhledával za pomoci softwaru NuGet\cite{nuget}, který slouží jako správce balíčků, tedy externích knihoven, v jazyce \csharp\, a ekosystému .NET. Z dostupných knihoven mě primárně zaujaly dvě - Docker.Dotnet\cite{dockerdotnet} a Fluent.Docker\cite{fluentdocker}. 
+Testovací knihovna je sepsána v jazyce \csharp, proto k vyhledání již existujících řešení byl použit software NuGet\cite{nuget}, který slouží jako správce balíčků, tedy externích knihoven, v jazyce \csharp\, a ekosystému .NET. Z dostupných knihoven na první pohled byly nejzajímavějšími knihovny Docker.Dotnet\cite{dockerdotnet} a Fluent.Docker\cite{fluentdocker}. 
 
 Docker.Dotnet je open-source knihovna vytvořena a spravována .NET Foundation. Tato nezisková organizace, založena společností Microsoft, se stará o zlepšování open-source ekosystému okolo .NET platformy\cite{dotnetfoundation}. Lze ji tedy v podstatě označit jako \uv{oficiální} integraci softwaru Docker do .NET ekosystému, přestože je fakticky komunitním dílem. 
 
 Oproti tomu knihovna Fluent.Docker je open-source knihovna původně od vývojáře Mario Toffia, na které se ale k dnešnímu dni podílelo určitým způsobem již 30 vývojářů. Knihovna se primárně zaměřuje na integraci tzv. Fluent rozhraní, které dovoluje řetězit metody za sebou, díky tomu, že každá metoda vrací instanci třídy, ze které je metoda volána. \cite{fluentinterface}
 
-Obě knihovny jsou ve spoustě aspektech srovnatelné - obě jsou open-source knihovny vytvořeny komunitou a obě jsou vhodné pro komerční použití. K integraci jsem ovšem zvolil knihovna Fluent.Docker. Tato knihovna obsahuje větší abstrakci jednotlivých příkazů a je tedy mnohem jednoduší k použití a integraci.
+Obě knihovny jsou ve spoustě aspektech srovnatelné - obě jsou open-source knihovny vytvořeny komunitou a obě jsou vhodné pro komerční použití. K integraci byla ovšem zvolena knihovna Fluent.Docker. Tato knihovna obsahuje větší abstrakci jednotlivých příkazů a je tedy mnohem jednoduší k použití a integraci.
 
 \subsection{Správa sítě}
 

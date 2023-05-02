@@ -1,6 +1,6 @@
 \chapter{Návrh}\label{chap:design}
 
-V této kapitole se zabývám návrhem úprav a rozšíření původní testovací knihovny
+Tato kapitola se zabývá návrhem úprav a rozšíření původní testovací knihovny.
 
 
 \section{Souhrn požadavků}
@@ -150,7 +150,7 @@ Možnou komunikaci mezi testovací službou a účastníky testu, tedy zařízen
 
 \section{Testovací služba}
 
-Jádrem testovacího běhu zůstane testovací služba, která musí komunikovat a tím ovládat alespoň jedno zařízení. Ve stávající implementaci byla na počátku testování vytvořena jedna instance testovací služby, která existovala po celou dobu testování. Nově bude životnost testovací služby navázána na dané virtualizované prostředí Testovací služba tedy vznikne až po úspěšném vytvoření virtualizovaného prostředí. Při změně virtualizovaného prostředí bude testovací služba ukončena a po vytvoření nového prostředí spuštěna nová instance.
+Jádrem testovacího běhu zůstane testovací služba, která musí komunikovat a tím ovládat alespoň jedno zařízení. Ve stávající implementaci byla na počátku testování vytvořena jedna instance testovací služby, která existovala po celou dobu testování. Nově bude životnost testovací služby navázána na dané virtualizované prostředí. Testovací služba tedy vznikne až po úspěšném vytvoření virtualizovaného prostředí. Při změně virtualizovaného prostředí bude testovací služba ukončena a po vytvoření nového prostředí spuštěna nová instance.
 
 Fungování testovací služby lze spatřit na novém diagramu aktivit testovací služby na obrázku \ref{fig:activitydiagramservice}, na kterém jsou označeny i změny oproti původnímu diagramu aktivit testovací služby. Jak můžeme na diagramu vidět, nově již nelze přidávat nové testovací partnery po dokončení inicializační fáze testovací služby.
 
