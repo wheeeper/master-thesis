@@ -18,7 +18,7 @@ V předchozí implementaci nebylo potřeba žádné zařízení vytvářet exter
     \item \inlinecode{TestLib} (složka \inlinecode{test\_lib}) - celá testovací knihovna, která mimo jádra testovací služby obsahuje testovací službu, integraci virtualizovaného prostředí a další pomocné entity. Jádro testovací knihovny je přidáno jako závislost. 
 \end{itemize}
 
-S využitím \inlinecode{TestLib.Core} je tedy uživatel připojen k testovací službě, která následně může ovládat testovací běh na zařízení. Tato implementace je skoro identická s implementací v jazyce \cpp. Nově zde přibyla i implementace v jazyce Python. Ta vznikla z důvodu pohodlnosti testerů, kteří píší velkou část testů právě v tomto jazyce. S její pomocí budou schopni jednodušeji integrovat stávající testy do nové testovací knihovny. 
+S využitím \inlinecode{TestLib.Core} je tedy uživatel připojen k testovací službě, která následně může ovládat testovací běh na zařízení. Obsah je skoro identická s implementací v jazyce \cpp. Nově zde přibyla i implementace v jazyce Python. Ta vznikla z důvodu pohodlnosti testerů, kteří píší velkou část testů právě v tomto jazyce. S její pomocí budou schopni jednodušeji integrovat stávající testy do nové testovací knihovny. 
 
 \subsection{Úprava testovací služby}\label{sec:test_service_changes}
 
@@ -58,7 +58,7 @@ Testovací knihovna k úspěšnému vytvoření potřebuje umět primárně tyto
 Orchestrace virtualizovaného prostředí má dle návrhu probíhat s pomocí softwaru Docker. 
 Jako první tedy bylo potřeba integrovat komunikaci se softwarem Docker do testovací knihovny. Před vytvořením vlastní integrace je ale rozumné se nejdříve porozhlédnout, zda nějaká již z existujících integrací není vhodná k použití v testovací knihovně. 
 
-Testovací knihovna je sepsána v jazyce \csharp, proto k vyhledání již existujících řešení byl použit software NuGet\cite{nuget}, který slouží jako správce balíčků, tedy externích knihoven, v jazyce \csharp\, a ekosystému .NET. Z dostupných knihoven na první pohled byly nejzajímavějšími knihovny Docker.Dotnet\cite{dockerdotnet} a Fluent.Docker\cite{fluentdocker}. 
+Testovací knihovna je sepsána v jazyce \csharp, proto k vyhledání již existujících řešení byl použit software NuGet\,\cite{nuget}, který slouží jako správce balíčků, tedy externích knihoven, v jazyce \csharp\, a ekosystému .NET. Z dostupných knihoven na první pohled byly nejzajímavějšími knihovny Docker.Dotnet\,\cite{dockerdotnet} a Fluent.Docker\,\cite{fluentdocker}. 
 
 Docker.Dotnet je open-source knihovna vytvořena a spravována .NET Foundation. Tato nezisková organizace, založena společností Microsoft, se stará o zlepšování open-source ekosystému okolo .NET platformy\cite{dotnetfoundation}. Lze ji tedy v podstatě označit jako \uv{oficiální} integraci softwaru Docker do .NET ekosystému, přestože je fakticky komunitním dílem. 
 
@@ -85,14 +85,15 @@ Pro vytvoření úspěšného propojení mezi dvěma zařízeními je potřeba p
 
 Tato metoda nejdříve vytvoří strukturu uložení všech informací o síti a kontejnerech. Metody \inlinecode{AddNode} a \inlinecode{AddConnection} totiž pouze přidají dané informace do front, které jsou v tento moment zpracovávány za pomoci metody \inlinecode{ConstructDataStructure}. Metoda nejdříve pomocí metody \inlinecode{RegisterNode} zaregistruje všechna zařízení, což vede hlavně k přiřazení unikátního indexu všem zařízením. Reference mezi jménem a indexem je uložena ve slovníku \inlinecode{nodeMapper}. 
 
-Následně metoda zaregistruje s pomocí metody \inlinecode{RegisterConnection} všechna spojení, což znamená, že dvojice indexů zařízení, mezi kterými má existovat spojení, jsou přidány do seřazené množiny, která je uložena v atributu \inlinecode{connections}. Tyto dva indexy jsou ovšem v relaci a platí $\forall x,y \in K, xSy \Rightarrow ySx$, kde $K$ představuje množinu všech indexů zařízení a $S$ je binární relace spojení zařízení zařízení.
-Proto  jsou do atributu \inlinecode{connections} ukládány obě symetrické hodnoty, primárně pro zjednodušení vyhledávání v této kolekci.
+Následně s pomocí metody \inlinecode{RegisterConnection} je zaregistrováno každé spojení, což znamená, že všechny dvojice indexů zařízení, mezi kterými má existovat spojení, jsou přidány do seřazené množiny, která je uložena v atributu \inlinecode{connections}. 
+
+Tyto dva indexy jsou ovšem v relaci a platí $\forall x,y \in K, xSy \Rightarrow ySx$, kde $K$ představuje množinu všech indexů zařízení a $S$ je binární relace spojení zařízení zařízení. Proto  jsou do atributu \inlinecode{connections} ukládány obě symetrické hodnoty, primárně pro zjednodušení vyhledávání v této kolekci.
 
 Jednotlivé informace o síťovém nastavení zařízení jsou uloženy v seznamu \inlinecode{nodeConfigurations}, který je indexován za pomoci atributu \inlinecode{nodeMapper}. Ten obsahuje instance třídy \inlinecode{ContainerNetworkConf}, která obsahuje informace o všech sítích, ke kterým je dané zařízení připojeno, a jakou v něm má přiřazenou IP adresu, o adrese implicitního směrovače a seznam všech statických směrování. Statická směrování jsou reprezentována za pomoci třídy \inlinecode{NetworkRoute}, jejíž instance obsahuje všechny potřebné informace. 
 
 Samotné reálné vytváření sítě počíná vytvořením tzv. správcovské sítě, do které budou připojena všechna zařízení. Ta slouží primárně pro případnou komunikaci s testovací službou. Tato síť je typu bridge. Všechna zařízení budou mít nastavena směrovač této sítě jako implicitní bránu.
 
-Následně třída pro každé spojení vytvoří separátní síť typu bridge. Na první pohled se může zdát, že se jedná o velice neefektivní řešení. Důvodem, proč jsem zvolil toto řešení, je ovšem technologické omezení. V každé síti typu bridge je vytvořen implicitní směrovač, který rozesílá komunikaci daným kontejnerům. Tím pádem jde každá komunikace v základním nastavení z odchozího kontejneru do směrovače a následně do cílového kontejneru. Tím by ale byla porušena požadovaná topologie. Z tohoto důvodu je pro každý spoj vytvořena nová síť. Za pomoci statického směrování je poté následně možné směrovat komunikaci do každého zařízení dle požadované topologie. 
+Následně třída pro každé spojení vytvoří separátní síť typu bridge. Na první pohled se může zdát, že se jedná o velice neefektivní řešení. Toto řešení bylo ovšem zvolenu z důvodu technického omezení. V každé síti typu bridge je vytvořen implicitní směrovač, který rozesílá komunikaci daným kontejnerům. Tím pádem jde každá komunikace v základním nastavení z odchozího kontejneru do směrovače a následně do cílového kontejneru. Tím by ale byla porušena požadovaná topologie. Z tohoto důvodu je pro každý spoj vytvořena nová síť. Za pomoci statického směrování je poté následně možné směrovat komunikaci do každého zařízení dle požadované topologie. 
 
 Metoda tedy nejdříve vytvoří s pomocí metody \inlinecode{CreateNetwork} pro každé připojení síť a informace o dané síti uloží seznamu \inlinecode{networkInfos}. Index sítě je následně uložen do slovníku \inlinecode{networkIndexer}, kde klíčem je dvojice indexů zařízení, mezi kterými daná síť, a tedy spojení, existuje. Oproti atributu \inlinecode{connections}, slovník neobsahuje obě symetrické hodnoty indexů. Platí, že $\forall x \forall y; x,y\in K; (x,y) \in \inlinecode{networkIndexer.Keys} \Rightarrow x < y$. 
 
@@ -138,7 +139,7 @@ Vytvoření samotného kontejneru je následně provedeno metodou \inlinecode{Cr
 Každý kontejner je definován za pomoci rozhraní \inlinecode{IVMContainer}, definovaného v sekci \ref{sec:cont_design}. Pomocí těchto metod je každý kontejner nastavován a realizace těchto nastavení je poté na dané implementaci rozhraní. V aktuální implementaci existují tyto dvě implementace kontejnerů: 
 
 \begin{itemize}
-    \item \inlinecode{DefaultContainer} - základní kontejner vycházející z operačního systému Ubuntu. Reprezentován je hodnotou z výčtového typu \inlinecode{ContainerType.DEFAULT} 
+    \item \inlinecode{DefaultContainer} - základní kontejner vycházející z operačního systému Ubuntu 22.04. Reprezentován je hodnotou z výčtového typu \inlinecode{ContainerType.DEFAULT} 
     \item \inlinecode{NetworkLogger} - kontejner, který zajišťuje odposlouchávání sítě. Reprezentován je hodnotou z výčtového typu \inlinecode{ContainerType.NETWORK\_LOGGER}
 \end{itemize}
 
@@ -150,7 +151,7 @@ Metoda \inlinecode{CreateContainer} následně vrátí instanci kontejneru, kter
 
 \subsection{Správce celého virtualizovaného prostředí}
 
-Předchozí zmíněné správce je potřeba orchestrovat společně. K tomuto slouží třída \inlinecode{VirtualEnvironmentManager}. Třída obdrží instanci \inlinecode{EnvironmentConfiguration}, která reprezentuje nastavení virtualizovaného prostředí definovaného v sekci \ref{sec:env_conf}. Následně také obdrží instanci třídy \inlinecode{ServiceConfiguration}, ve které je obsaženo nastavení testovací služby.
+Předchozí zmíněné správce je potřeba orchestrovat společně. K tomuto slouží třída \inlinecode{VirtualEnvironmentManager}, která je dle návrhu požadovaný správce virtualizovaného prostředí. Třída obdrží instanci \inlinecode{EnvironmentConfiguration}, která reprezentuje nastavení virtualizovaného prostředí definovaného v sekci \ref{sec:env_conf}. Následně také obdrží instanci třídy \inlinecode{ServiceConfiguration}, ve které je obsaženo nastavení testovací služby.
 
 Třída v sobě obsahuje instance obou dvou správců \inlinecode{NetworkManager} a \inlinecode{ContainerManager}. V konstruktoru je zavolána metoda \inlinecode{SetupEnvironment}, která zaregistruje všechny zařízení a připojení mezi nimi. Zároveň, pokud je dle nastavení potřeba zachytávat na daném spojení komunikaci, tak také přidá adekvátně dané odposlouchávače komunikace. 
 
@@ -165,7 +166,8 @@ Implementace virtualizovaného prostředí ošetřuje všechny chyby tím, že v
 Ovšem pokud je program násilně ukončen, může dojít k nesmazání daných vytvořených prostředků v Docker prostředí. To může způsobit jejich akumulaci a v případě sítě dokonce selhání vytvoření sítě. Testovací knihovna proto definuje ve statické třídě \inlinecode{TestLibConstants} proměnnou \inlinecode{ResourcePrefix}, která je přidána ke všem vytvořeným prostředkům.
 
 Díky tomu lze identifikovat ty prostředky, jež byly vytvořeny pomocí knihovny. Každý správce má tedy implementovanou metodu pro odstranění zbylých prostředků. Ty jsou volány prostřednictvím metody \inlinecode{RemoveHangingResources} v konstruktoru správce virtualizovaného prostředí před započetím všech akcí k vytvoření nového prostředí.
-\customtodo{dopsat restrikci}
+
+Z tohoto přístupu je ovšem očividné, že testovací knihovna nedokáže rozlišit mezi zdroji, které jsou využívané jinou instancí knihovny, a nesmazanými zdroji. Z tohoto důvodu může na jednom stroji běžet pouze jedna instance knihovny.
 
 \subsection{Definice kontejnerů}
 
@@ -217,14 +219,14 @@ Zaznamenávání sítě je ukončeno při obdržení zprávy o ukončení testu.
     \label{fig:logger_activity}
 \end{figure}
 
-Program má definovaný Dockerfile, vycházející z definovaného obrazu \inlinecode{testlib-ubuntu-base}, na jehož základě může být program spuštěn ve virtualizovaném prostředí prostřednictvím softwaru Docker. Ten je oproti původnímu prostředí rozšířen o dvě komponenty:
+Program má definovaný Dockerfile, vycházející z předem definovaného obrazu \inlinecode{testlib-ubuntu-base}, na jehož základě může být program spuštěn ve virtualizovaném prostředí prostřednictvím softwaru Docker. Ten je oproti původnímu prostředí rozšířen o dvě komponenty:
 
 \begin{itemize}
     \item \inlinecode{dotnet-runtime-6.0} - vše potřebné ke spuštění .NET 6 programu v Ubuntu
     \item \inlinecode{libpcap-dev} - knihovna k zaznamenávání packetů 
 \end{itemize}
 
-Obraz také využívá obraz \inlinecode{mcr.microsoft.com/dotnet/sdk:6.0}, s jehož pomocí je celý program zkompilován. V základním nastavení je program spuštěn v módu bez připojení k testovací službě. To lze při vytváření kontejneru změnit a tedy program správně nastavit. Daný vytvořený obraz byl zveřejněn ve veřejném repozitáři na Docker Hub\cite{docker_hub} a je dostupný pod názvem \inlinecode{wheeeper/networklogger}.
+Obraz také využívá obraz \inlinecode{mcr.microsoft.com/dotnet/sdk:6.0}, s jehož pomocí je celý program zkompilován. V základním nastavení je program spuštěn v módu bez připojení k testovací službě. To lze při vytváření kontejneru změnit a tedy program správně nastavit. Daný vytvořený obraz byl zveřejněn ve veřejném repositáři na Docker Hub\cite{docker_hub} a je dostupný pod názvem \inlinecode{wheeeper/networklogger}.
 
 \section{Integrace virtualizovaného prostředí do testovací knihovny}
 

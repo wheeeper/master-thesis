@@ -4,9 +4,7 @@ Tato kapitola se věnuje analýze aktuálního stavu testovací knihovny a možn
 
 \section{Analýza stávajícího stavu knihovny}
 
-Původní testovací knihovna byla výstupem mé bakalářské práce\cite{bakalarka} dokončené v roce 2021. Cílem této knihovny byla automatizace testů verifikace průmyslové komunikace a integrace do kontinuálního testování na Azure DevOps serveru. 
-
-Knihovna rozlišuje tři druhy účastníků testování:
+Původní testovací knihovna byla výstupem mé bakalářské práce\,\cite{bakalarka} dokončené v roce 2021. Cílem této knihovny byla automatizace testů verifikace průmyslové komunikace a integrace do kontinuálního testování na Azure DevOps serveru. Vytvořená knihovna rozlišuje tři druhy účastníků testování:
 
 \begin{description}
     \item[Testovací služba] Služba, která řídí testovací běh.
@@ -14,7 +12,7 @@ Knihovna rozlišuje tři druhy účastníků testování:
     \item[Testovací partner] Zařízení, které simuluje nějaké testované zařízení. Toto zařízení běží na stejném zařízení, jako testovací služba. 
 \end{description}
 
-Ideou knihovny je, že testovací služba, která řídí a synchronizuje běh na všech zúčastněných zařízeních, je spouštěna automatizovaně za pomoci Azure DevOps serveru v Azure Pipelines. Společně s ním je spuštěn i vyvíjený produkt, který je hlavním cílem testování, v tomto kontextu nazýván jako testované zařízení. Testované zařízení se následně připojí k testovací službě a po úspěchu této fáze započne samotné testování. Implicitně knihovna tedy vyžaduje alespoň jedno nevirtualizované testované zařízení (v tomto smyslu zařízení nesmí být virtualizované testovací knihovnou). 
+Ideou knihovny je, že testovací služba, která řídí a synchronizuje běh na všech zúčastněných zařízeních, je spouštěna automatizovaně za pomoci Azure DevOps serveru v Azure Pipelines. Společně s ním je spuštěn i vyvíjený produkt, který je hlavním cílem testování, v tomto kontextu nazýván jako testované zařízení. Testované zařízení se následně připojí k testovací službě a po úspěchu této fáze započne samotné testování. Implicitně knihovna tedy vyžaduje alespoň jedno reálné zařízení. 
 
 Pro každý test lze definovat další účastníky testování - testovací partnery. Tito testovací partneři běží pouze po dobu daného testu a po dokončení testu zaniknou. Hlavní úlohou těchto zařízení je simulace protistrany při komunikaci. 
 
@@ -23,8 +21,7 @@ Ukázka možného propojení všech účastníků testování je k vidění na o
 \begin{figure}[htbp]
     \centering 
     \includegraphics[width=0.97\textwidth]{assets/img/bp_assets/devicemodel.pdf}
-    \caption{Ukázka možného propojení účastníků testování v původní knihovně}
-    \source{Převzato z \cite{bakalarka}}
+    \sourcedcaption{Ukázka možného propojení účastníků testování v původní knihovně}{Zdroj Martin Štěpánek\,\cite{bakalarka}}
     \label{fig:bp_devicemodel}
 \end{figure}
 
@@ -73,7 +70,7 @@ Z analýzy stávajícího stavu knihovny je vidět, že možnost virtualizace pr
 
 \begin{itemize}
     \item možnost spustit jakékoliv zařízení jako virtualizované,
-    \item zapojit tato zařízení dle definované topologie (sériové linky, kruhu, hvězdy).
+    \item a zapojit tato zařízení dle definované topologie. 
 \end{itemize}
 
 Hlavní motivací je zvýšení flexibility knihovny, rozšíření možností využití a minimalizace úsilí potřebného na testovaní, což vede ke snížení nákladů na testování. Tyto kroky také směřují ke snížení závislosti na reálném hardwaru, na kterém běží účastníci testů. Je ale samozřejmé, že testy na reálném hardwaru budou vždy potřeba a nelze se této závislosti nijak zbavit.
@@ -82,32 +79,34 @@ Hlavní motivací je zvýšení flexibility knihovny, rozšíření možností v
 
 Možností jak virtualizovat zařízení existuje několik. Tyto techniky byly přiblíženy v sekci \ref{sec:virtualization}. Co je tedy nejvhodnějším přístupem k virtualizaci námi požadovaných průmyslových zařízení? 
 
-Jedno z možností je vytvoření VM pro každé virtualizované zařízení. Volba operačního systému poté závisí na zařízení. Pro zachování univerzálnosti hostitelského zařízení dává smysl použití hypervizoru typu II.
+Jednou z možností je použít QEMU, které dokáže emulovat širokou škálu platforem. Díky emulaci by teoreticky mělo být možné emulovat jakékoliv zařízení s minimálním potřebou zásahu do kódu daného zařízení. 
+
+Další možností je vytvoření VM pro každé virtualizované zařízení. Volba operačního systému poté závisí na zařízení. Pro zachování univerzálnosti hostitelského zařízení dává smysl použití hypervizoru typu II.
 
 Logickou možností je také použití virtualizace skrze kontejnerizaci. Díky kontejnerizaci nemusíme virtualizovat celé operační systémy, ale pouze jejich části, čímž můžeme ušetřit výpočetní zdroje.
 
-Který přístup je tedy efektivnější? Dle studií, jež zkoumaly rozdíl ve výkonu a efektivnosti využití výpočetních zdrojů mezi kontejnerizací prostřednictvím softwaru Docker a virtualizačního řešení KVM, který umožňuje jádru fungovat jako hypervizor, je lepším přístupem kontejnerizace. 
+Který přístup je tedy efektivnější? Dle studií, jež zkoumaly rozdíl ve výkonu a efektivnosti využití výpočetních zdrojů mezi kontejnerizací prostřednictvím softwaru Docker a virtualizačního řešení KVM, jenž je využíván i QEMU\,\cite{qemu_kvm}, který umožňuje jádru fungovat jako hypervizor, je lepším přístupem kontejnerizace. 
 
-Při jejich porovnání bylo zjištěno, že s použitím kontejnerizačního řešení Docker je virtualizovaná zařízení spouštět výrazně rychleji. Tato zařízení také spotřebovávají méně výpočetních zdrojů. V porovnání při počítání HPC(High performance counting) úkolů, bylo dosaženo díky nástroji Docker lepšího výkonu o 42\,\% při úkolech náročných na procesor a o 14,98\,\% lepšího výkonu při úkolech náročných na interní paměť.\cite{kvmdockercomp}\cite{2021virt} 
+Při jejich porovnání bylo zjištěno, že s použitím kontejnerizačního řešení Docker jsou virtualizovaná zařízení spouštěná výrazně rychleji. Tato zařízení také spotřebovávají méně výpočetních zdrojů. V porovnání při počítání HPC(High performance counting) úkolů, bylo dosaženo díky nástroji Docker lepšího výkonu o 42\,\% při úkolech náročných na procesor a o 14,98\,\% lepšího výkonu při úkolech náročných na interní paměť.\,\cite{kvmdockercomp}\cite{2021virt} 
 
-Jak je tedy vidět, virtualizace kontejnerizací je efektivnější. V následující analýze tedy budeme uvažovat již pouze kontejnerizační řešení. 
+Jak je tedy vidět, virtualizace kontejnerizací je efektivnější. V následujících sekcích tedy budeme uvažovat pouze nad virtualizací za pomoci kontejnerizace. 
 
 \subsection{Porovnání kontejnerizačních řešení}
 
 V dnešní době existuje mnoho řešení, která využívají kontejnerizaci. V následující sekci budou porovnána jednotlivá vybraná řešení a zároveň bude zhodnocena jejich vhodnost pro použití v testovací knihovně. 
 
-Cílem je tedy primárně použít k řešení kontejnerizace tzv. \textit{container engines}. Jejich přímým využitím, oproti využití několika nástrojů, které by dohromady tvořily container engine, se, doufám, předejde problémům s kompatibilitou a integrací těchto nástrojů dohromady.
+Primárním cílem použít k řešení kontejnerizace tzv. \textit{container engine}. Jeho přímým využitím, oproti využití několika nástrojů, které by dohromady tvořily container engine, se, doufám, předejde problémům s kompatibilitou a integrací těchto nástrojů dohromady. Nic ovšem nebrání využití řešení, které už všechny použité nástroje integrovalo dohromady.
 
-Hlavním požadavkem na dané řešení je, aby podporovalo operační systém Windows. Tento požadavek primárně vyvstává z infrastruktury firmy Siemens. Vybranými řešeními tedy jsou
+Z technologického hlediska jediným požadavkem na dané řešení je podpora operačního systému Windows. Tento požadavek primárně vyvstává z infrastruktury firmy Siemens. Vybranými řešeními tedy jsou
 
 \begin{itemize}
     \item Docker,
     \item Podman.
 \end{itemize}
 
-Obě tato řešení jsou velice srovnatelná. Jak bylo zmíněno, ve spoustě případů je možné zaměnit příkaz \inlinecode{docker} za \inlinecode{podman} bez jakýchkoli problémů. 
+Obě tato řešení jsou srovnatelná. Jak bylo zmíněno, ve spoustě případů je možné zaměnit příkaz \inlinecode{docker} za \inlinecode{podman} bez jakýchkoli problémů. 
 
-Pokud se ovšem zaměříme na jejich rozdíly, tak Docker v základu podporuje více síťových ovladačů. Je však možné také implementovat vlastní síťový ovladač. \cite{docker_networking_overview}
+Pokud se ovšem zaměříme na jejich rozdíly, tak Docker v základu podporuje více síťových ovladačů. Je však možné také implementovat vlastní síťový ovladač.\,\cite{docker_networking_overview}
 
 Největší výhoda ovšem spočívá v rozšířenosti softwaru Docker. Při pohledu na dostupnost knihoven integrujících software Docker do prostředí .NET, ve kterém běží stávající knihovna, je vidět rovnou několik možností, které lze využít. Oproti tomu pro software Podman tyto integrace neexistují. Při jeho integraci by tedy bylo potřeba vytvořit vlastní integraci. 
 
@@ -124,13 +123,13 @@ Vyvstává zde tedy otázka, zdali je teoreticky možné propojit jednotlivá vi
 
 \subsection{Analýza}
 
-Jednotlivé Docker kontejnery nemají ponětí o propojení s externí sítí, tedy sítí mimo virtualizované prostředí. Kontejnery, pokud jsou připojeny k nějaké síti, mají pouze znalost o implicitní bráně, na kterou směřují veškerou komunikaci. Pokud kontejnery nejsou izolované, jsou takto schopné dosáhnout hostujícího stroje a tím i externí sítě. V komunikaci ve směru od virtualizovaného zařízení k reálnému zařízení by tedy neměl být problém. \cite{docker_brige_overview}
+Jednotlivé Docker kontejnery nemají ponětí o propojení s externí sítí, tedy sítí mimo virtualizované prostředí. Kontejnery, pokud jsou připojeny k nějaké síti, mají pouze znalost o implicitní bráně, na kterou směřují veškerou komunikaci. Pokud kontejnery nejsou izolované, jsou takto schopné dosáhnout hostujícího stroje a tím i externí sítě. V komunikaci ve směru od virtualizovaného zařízení k reálnému zařízení by tedy neměl být problém.\,\cite{docker_brige_overview}
 
-Problém může ovšem nastat v opačném směru. Jednotlivé kontejnery v základním nastavení nejsou dostupné z externí sítě. Docker ovšem podporuje přesměrování portů. Tímto způsobem je možné namapovat port z virtualizovaného prostředí na port na hostujícím zařízení, na který je následně směřována komunikace z externího zařízení. \cite{docker_ports}
+Problém může ovšem nastat v opačném směru. Jednotlivé kontejnery v základním nastavení nejsou dostupné z externí sítě. Docker ovšem podporuje přesměrování portů. Tímto způsobem je možné namapovat port z virtualizovaného prostředí na port na hostujícím zařízení, na který je následně směřována komunikace z externího zařízení.\,\cite{docker_ports}
 
 Vyvstává zde však problém vznikající primárně z definice jednotlivých komunikačních protokolů. Tyto protokoly často běží na specifickém portu a tedy komunikace s více než jedním zařízením může způsobit kolizi těchto portů. To může zapříčinit neschopnost komunikace se všemi virtualizovanými zařízeními. 
 
 \subsection{Shrnutí}
 
-Jak z analýzy vyplývá, komunikace s reálnými zařízení je teoreticky možná. Ze specifika daného problému a protokolů využitých ke komunikaci ovšem nelze nyní komunikovat s externími zařízeními. K tomu, aby byla komunikace možná, je potřeba nejprve vyřešit problém kolize portů, pokud tedy nějaké řešení pro tento problém existuje. 
+Jak z analýzy vyplývá, komunikace s reálnými zařízení je teoreticky možná. Ze specifika daného problému a protokolů využitých ke komunikaci ovšem nebude možné při využití kontejnerizace s pomocí softwaru Docker komunikovat s externími zařízeními. K tomu, aby byla komunikace možná, je potřeba nejprve vyřešit problém kolize portů, pokud tedy nějaké řešení pro tento problém existuje. 
 

@@ -8,12 +8,11 @@ Tato kapitola popisuje ukázku použití nově vytvořené testovací knihovny.
 K tomu, aby mohla být testovací knihovna spuštěna, musí mít stroj nainstalované tyto položky:
 
 \begin{itemize}
-    \item Visual Studio 2022
-    \item .NET 6
+    \item .NET 6 včetně správce balíčků NuGet
     \item Docker Desktop
 \end{itemize}
 
-Zároveň pro Docker Daemon, jenž je součástí Docker Desktop, musí být nastaveny rozmezí IP adres, ve kterých lze vytvářet sítě. To lze upravit v Docker Desktop v nastavení pod kolonkou \inlinecode{Docker Engine}. Možnou ukázku dodatečného nastavení můžeme vidět na výpisu \ref{listing:docker_conf}. 
+Zároveň pro Docker Daemon, jenž je součástí Docker Desktop, musí být nastaveny rozmezí IP adres, ve kterých lze vytvářet sítě. To lze upravit v Docker Desktop v nastavení pod kolonkou \inlinecode{Docker Engine}. Možnou ukázku dodatečného nastavení můžeme vidět na výpisu \ref{listing:docker_conf}. Současně se všemi těmito požadavky musí být zaručeno, že v průběhu běhu knihovny nebude spuštěna další instance testovací knihovny.
 
 \begin{listing}[htbp]
     \centering
@@ -38,7 +37,7 @@ Zároveň pro Docker Daemon, jenž je součástí Docker Desktop, musí být nas
 
 Hlavní výhodou nové testovací knihovny je její flexibilita ve vytváření jednotlivých topologií ve virtualizovaném prostředí. Cílem tedy bylo navrhnout test, který by byl lehce škálovatelný a použitelný na všechny topologie. 
 
-Nejdříve byl ovšem pro komunikaci zvolen průmyslový protokol ModbusTCP. Všechna komunikace mezi zařízeními tedy probíhá dle jeho specifikace. K úspěšné komunikaci tedy bude potřeba právě jeden server a alespoň jeden klient, který bude se serverem komunikovat. Test poté bude probíhat následovně:
+Pro komunikaci mezi zařízeními byl zvolen průmyslový protokol ModbusTCP. Všechna komunikace mezi zařízeními bude probíhat dle jeho specifikace. K úspěšné komunikaci tedy bude potřeba právě jeden server a alespoň jeden klient, který bude se serverem komunikovat. Test poté bude probíhat následovně:
 
 \begin{enumerate}
     \item Uvnitř testovacího prostředí bude běžet server, který bude přijímat komunikaci.
@@ -127,7 +126,7 @@ Díky podobné struktuře obou programů jsou všechny kontejnery skoro identick
     \item \inlinecode{python-3.10-venv}
 \end{itemize}
 
-Tyto balíčky jsou nutnou součástí kontejneru a slouží ke spuštění dříve definovaných Python programů. Následně je vytvořena složka \inlinecode{app}, do které jsou nakopírovány všechny zdrojové soubory programu. Spolu s ní je vytvořena složka \inlinecode{packages}, do které jsou nakopírovány všechny balíčky ze stejnojmenné složky v kořenové složce programu. Tato složka slouží pro balíčky, které nebyly uveřejněny a tedy nejsou dostupné z veřejného repozitáře.
+Tyto balíčky jsou nutnou součástí kontejneru a slouží ke spuštění dříve definovaných Python programů. Následně je vytvořena složka \inlinecode{app}, do které jsou nakopírovány všechny zdrojové soubory programu. Spolu s ní je vytvořena složka \inlinecode{packages}, do které jsou nakopírovány všechny balíčky ze stejnojmenné složky v kořenové složce programu. Tato složka slouží pro balíčky, které nebyly uveřejněny a tedy nejsou dostupné z veřejného repositáře.
 
 Po nakopírování všech souborů je vytvořeno virtuální Python prostředí. S jeho pomocí jsou poté nainstalovány všechny lokální balíčky ve složce packages, pokud nějaké existují. Poté jsou nainstalovány všechny balíčky obsažené v souboru \inlinecode{requirements.txt}. Ten obsahuje seznam všech potřebných balíčků ke spuštění programu, včetně těch, jež nejsou veřejně dostupné. Pokud je možné program spustit bez argumentů, tak je do kontejneru přidán i příkaz na spuštění aplikace. Při použití v knihovně ovšem bude toto spuštění změněno. Ukázku definice docker kontejneru můžeme vidět na výpise \ref{listing:dockerfile}
 
@@ -243,9 +242,11 @@ links:
 
 \section{Testovací projekt}
 
-K tomu, aby mohla být spuštěna testovací knihovna, je zapotřebí vytvořit testovací projekt. Tento projekt musí obsahovat vytvořenou testovací knihovnu a také testovací knihovny MSTest. Projekt je možné vytvořit ze šablon, jenž jsou poskytnuty IDE Visual Studio 2022\cite{vs2022}. K vytvoření projektu byla použita šablona s názvem \textit{MSTest Test Project}. Do vytvořeného projektu je následně přidána testovací knihovna prostřednictvím správce balíčků NuGet\cite{nuget}. 
+K tomu, aby mohla být spuštěna testovací knihovna, je zapotřebí vytvořit testovací projekt. Tento projekt musí obsahovat vytvořenou testovací knihovnu a také testovací knihovny MSTest. Projekt je možné vytvořit ze šablon, jenž jsou poskytnuty IDE Visual Studio 2022\,\cite{vs2022}, jenž je využito při vývoji všech .NET komponent. K vytvoření projektu byla použita šablona s názvem \textit{MSTest Test Project}. Do vytvořeného projektu je následně přidána testovací knihovna prostřednictvím správce balíčků NuGet\,\cite{nuget}. 
 
 Aby mohl program využívat relativních cest pro všechny cesty konfigurační soubory, je potřeba nakopírovat všechny potřebné soubory do výstupní složky kompilace. K tomu byla do projektového souboru přidána direktiva na zkopírování složky \inlinecode{virtual\_env}, která obsahuje všechny potřebné zdroje. Tuto direktivu můžeme vidět na výpisu \ref{listing:copy_virtual_env}
+
+Po přidání testovací knihovny je potřeba zajistit její inicializaci a také její správné ukončení. Tuto definici lze vidět na výpisu \ref{listing:lib_init}. Tento proces zůstal nepozměněn od původní testovací knihovny. Jak je vidět, pro obě operace existují separátní funkce, které obsahují adekvátní atributy \inlinecode{AssemblyInitialize}, respektive \inlinecode{AssemblyCleanup}. Následně testovací knihovna MSTest zajistí jejich spuštění před započetím testování a po ukončení testovaní.  
 
 \begin{listing}[htbp]
     \centering
@@ -259,9 +260,6 @@ Aby mohl program využívat relativních cest pro všechny cesty konfigurační 
 \caption{Direktiva pro zkopírovaní složky při kompilaci}
 \label{listing:copy_virtual_env}
 \end{listing}
-
-
-Po přidání testovací knihovny je potřeba zajistit její inicializaci a také její správné ukončení. Tuto definici lze vidět na výpisu \ref{listing:lib_init}. Tento proces zůstal nepozměněn od původní testovací knihovny. Jak je vidět, pro obě operace existují separátní funkce, které obsahují adekvátní atributy \inlinecode{AssemblyInitialize}, respektive \inlinecode{AssemblyCleanup}. Následně testovací knihovna MSTest zajistí jejich spuštění před započetím testování a po ukončení testovaní.  
 
 \begin{listing}[htbp]
     \centering
@@ -341,7 +339,7 @@ public class ModbusLine
 
 \section{Spuštění testů}
 
-Jednotlivé testy lze spustit přímo z IDE Visual Studio 2022\cite{vs2022}. Po zobrazení okna \textit{Test Explorer} lze vidět všechny testy dostupné v projektu. Ty lze následně ze stejného pohledu i spustit. Po dokončení je následně vidět, zda test proběhl úspěšně nebo ne. Pohled po úspěšném dokončení všech testů můžeme vidět na obrázku \ref{fig:modbus_test_success}. 
+Jednotlivé testy lze spustit přímo z IDE Visual Studio 2022. Po zobrazení okna \textit{Test Explorer} lze vidět všechny testy dostupné v projektu. Ty lze následně ze stejného pohledu i spustit. Po dokončení je následně vidět, zda test proběhl úspěšně nebo ne. Pohled po úspěšném dokončení všech testů můžeme vidět na obrázku \ref{fig:modbus_test_success}. 
 
 \begin{figure}[htbp]
     \centering 
@@ -354,7 +352,9 @@ Po každém testovacím běhu lze v kořenové složce programu nalézt složku 
 
 Uvnitř každé složky jsou poté složky s názvy jednotlivých zařízení. Složka je vytvořena právě tehdy, pokud je co ze zařízení uložit, jako například záznam výpisu ze zařízení. V jednotlivých složkách odposlouchávačů komunikace poté nalezneme i záznam komunikace v průběhu testu. 
 
-Výstup ze serveru můžeme vidět na výpisu \ref{listing:modbus_server_log}. Pro kompaktnost z něj byla odstraněna informace o datu a času zápisu dané zprávy. Jak je vidět, všechna zařízení úspěšně provedla změnu a vždy pouze jeden klient prováděl danou změnu.
+Výstup ze serveru můžeme vidět na výpisu \ref{listing:modbus_server_log}. Pro kompaktnost z něj byla odstraněna informace o datu a času zápisu dané zprávy. Jak je vidět, všechna zařízení úspěšně provedla změnu v registrech. Zároveň každá změna byla prováděna vždy pouze jedním zařízením zároveň.
+
+Jak již bylo ukázáno u předchozí testovací knihovny\,\cite{bakalarka}, takto nastavený projekt lze poté spustit prostřednictvím Azure DevOps a tím zcela automatizovat testovaní. Jednotlivé testy lze přiřadit k testovacím příkazům definovaným v Azure DevOps, a ty se poté dají dle libosti spouštět. Je ovšem samozřejmé, že daný stroj, na kterém testování poběží, musí splňovat podmínky definované v sekci \ref{sec:test_requirements}.
 
 \begin{listing}[htbp]
     \centering
@@ -397,9 +397,6 @@ change in hreg space [20787 > 20788] at @ 0x0002 from ip: 172.16.16.42
 change in hreg space [56608 > 56609] at @ 0x0003 from ip: 172.16.16.42   
 change in coil space [True  > False] at @ 0x0000 from ip: 172.16.16.42   
     \end{cminted}
-\caption{Výstup na serveru po testu}
+\caption{Výstup ze serveru po testu}
 \label{listing:modbus_server_log}
 \end{listing}
-
-Jak již bylo ukázáno u předchozí testovací knihovny\cite{bakalarka}, takto nastavený projekt lze poté spustit prostřednictvím Azure DevOps a tím zcela automatizovat testovaní. Jednotlivé testy lze přiřadit k testovacím příkazům definovaným v Azure DevOps, a ty se poté dají dle libosti spouštět. Je ovšem samozřejmé, že daný stroj, na kterém testování poběží, musí splňovat podmínky definované v sekci \ref{sec:test_requirements}.
-
