@@ -322,13 +322,13 @@ public class ModbusLine
     [ClassInitialize]
     public static void StartUp(TestContext ctx)
     {
-        API.BuildEnvironment(@"virtual_env\modbus\topologies\modbus-line.yaml");
+       API.BuildEnvironment(@"virtual_env\modbus\topologies\modbus-line.yaml");
     }
 
     [TestMethod]
     public void TestReadAndUpdate()
     {
-        API.Run(TestCaseE.MODBUS_READUPDATE);
+       API.Run(TestCaseE.MODBUS_READUPDATE);
     }
 }
     \end{cminted}
@@ -339,7 +339,21 @@ public class ModbusLine
 
 \section{Spuštění testů}
 
-Jednotlivé testy lze spustit přímo z IDE Visual Studio 2022. Po zobrazení okna \textit{Test Explorer} lze vidět všechny testy dostupné v projektu. Ty lze následně ze stejného pohledu i spustit. Po dokončení je následně vidět, zda test proběhl úspěšně nebo ne. Pohled po úspěšném dokončení všech testů můžeme vidět na obrázku \ref{fig:modbus_test_success}. 
+Jednotlivé testy lze spustit přímo jak z příkazové řádky, tak z IDE Visual Studio 2022. 
+Potřebné příkazy pro spuštění skrz příkazovou řádku lze vidět na výpisu \ref{listing:cli_test_run}. Jak lze vidět, jako první jsou získány všechny balíčky skrz správce balíčků NuGet. Následně je spuštěno testování, což zahrnuje i kompilaci projektu. 
+
+\begin{listing}[htbp]
+    \centering
+    \begin{cminted}[breaklines,autogobble, fontsize=\footnotesize]{text}
+nuget restore -ConfigFile nuget.config .\TestProject.csproj
+dotnet test
+    \end{cminted}
+    \caption{Příkazy ke spuštění testů skrz příkazovou řádku}
+\label{listing:cli_test_run}
+\end{listing}
+
+
+Při využití IDE Visual Studio 2022 lze po zobrazení okna \textit{Test Explorer} vidět všechny testy dostupné v projektu. Ty lze následně ze stejného pohledu i spustit. Po dokončení je následně vidět, zda test proběhl úspěšně nebo ne. Pohled po úspěšném dokončení všech testů můžeme vidět na obrázku \ref{fig:modbus_test_success}. 
 
 \begin{figure}[htbp]
     \centering 
