@@ -22,7 +22,7 @@ Možností virtualizace je tedy spousta, a to na mnoha úrovních. Virtualizaci 
     Virtualizace je technologie, která kombinuje/rozděluje, výpočetní zdroje k prezentaci jednoho či více prostředí za pomoci metodologií jako hardwarového a softwarového rozdělování/agregování, parciální/kompletní simulací stroje, emulace a spousty dalších.\,\cite{chiueh2005survey}
 \end{displayquote}
 
-Jak je z definice vidět, virtualizace není jen o rozdělování výpočetních zdrojů, ale i o jejich sjednocování do větších celků. V rámci této práce se ale zaměřuji primárně na rozdělování výpočetních zdrojů za pomoci virtualizace. Mezi praktické využití virtualizace může patřit například:
+Jak je z definice vidět, virtualizace není jen o rozdělování výpočetních zdrojů, ale i o jejich sjednocování do větších celků. V rámci této práce se ale budeme zaměřovat primárně na rozdělování výpočetních zdrojů za pomoci virtualizace. Mezi praktické využití virtualizace může patřit například:
 
 \begin{description}
     \item[Konsolidace serveru] Za pomoci virtualizace lze přerozdělit práci z více serverů, které nejsou na plno používány, na jeden server, a tím ušetřit na hardwaru, managementu a administraci infrastruktury. Díky ní tedy snižujeme komplexitu administrace, jelikož veškerý software ve VM je nezávislý na softwaru fyzického serveru.\,\cite{chiueh2005survey}
@@ -59,13 +59,13 @@ Existují dva typy hypervizorů. Ty můžeme vidět na obrázku \ref{fig:vm_type
 \begin{figure}[htbp]
     \centering 
     \includegraphics[width=\textwidth]{assets/img/vm_types.pdf}
-    \sourcedcaption{Možné typy virtualizace na úrovni HAL}{Podle Fernando Rodríguez-Haroa et al.\,\cite{RODRIGUEZHARO2012267}}
+    \sourcedcaption{Typy hypervizorů}{Podle Fernando Rodríguez-Haroa et al.\,\cite{RODRIGUEZHARO2012267}}
     \label{fig:vm_types}
 \end{figure}
 
 \section{Možnosti virtualizace z technologického pohledu}
 
-Jak již bylo nastíněno, virtualizační vrstva může existovat na více úrovních. V této sekci bude přiblížena virtualizace od nejnižší vrstvy až po tu nejvyšší.
+Jak již bylo nastíněno, virtualizační vrstva může existovat na více úrovních. V následujících sekcích bude přiblížena virtualizace od nejnižší vrstvy až po tu nejvyšší.
 
 \subsection{Virtualizace ISA}
 
@@ -164,9 +164,9 @@ QEMU je emulátor, který využívá dynamického binárního překladu. Tento n
     \item Emulace celého systému
 \end{enumerate}
 
-Za pomoci prvního módu je QEMU schopno spustit aplikaci, která byla zkompilována pro jeden procesor na jiném procesoru. V druhém emuluje celý hostovaný systém. QEMU podporuje velikou řadu procesorových architektur, jako například x86 nebo ARM. 
+Za pomoci prvního módu je QEMU schopno spustit aplikaci, která byla zkompilována pro jeden procesor na jiném procesoru. V druhém emuluje celý hostovaný systém. QEMU podporuje velikou řadu procesorových architektur, jako například x86 nebo ARM.\,\cite{chiueh2005survey}
 
-QEMU funguje tak, že za běhu překládá instrukce do tvaru, který vyžaduje hostující systém. Hlavní ideou je, že každá instrukce je rozdělená na několik jednodušších instrukcí, které se nazývají \textit{micro operations}, neboli česky mikro operace. Každá tato zjednodušená instrukce je implementována kusem kódu napsaném v jazyce C a následně zkompilována. 
+QEMU funguje tak, že za běhu překládá instrukce do tvaru, který vyžaduje hostující systém. Hlavní ideou je, že každá instrukce je rozdělená na několik jednodušších instrukcí, které se nazývají \textit{micro operations}, neboli česky mikro operace. Každá tato zjednodušená instrukce je implementována kusem kódu napsaném v jazyce C a následně zkompilována.\,\cite{chiueh2005survey}\cite{bellard2005qemu}
 
 Výstupní objektový soubor je následně použit jako vstup pro vytvoření dynamického generátoru kódu. Ten je následně spuštěn a spojením několika mikro operací dokáže vygenerovat plnohodnotnou instrukci pro hostitelský stroj.\,\cite{chiueh2005survey}\cite{bellard2005qemu}
 
@@ -179,7 +179,7 @@ Implementace hypervizoru typu I se nazývá VMware ESXi a zaměřuje se na komer
 
 Hypervizor typu II. poté můžeme nalézt v produktu VMware Workstation. Tento produkt je zaměřen na virtualizaci na osobním počítači. Produkt, který je nainstalován v prostoru hostujícího operačního systému, je spouštěn jako kterýkoliv jiný program. Jeho součástí ovšem je předem zmíněný hypervizor, který se stará o propojení mezi VM a hardwarem. Komunikaci s hardwarem potom hypervizor realizuje za pomoci systémových volání hostujícího operačního systému.\,\cite{9647226}
 
-Oba dva tyto produkty pracují na úrovní virtualizace celého operačního systému, tedy všechny VM obsahují plnohodnotný hostovaný operační systém.
+Oba dva tyto produkty pracují na pomocí virtualizace celého operačního systému, tedy všechny VM obsahují plnohodnotný hostovaný operační systém.
 
 \subsection{Docker}
 Docker je neznámějším a nejrozšířenějším nástrojem, který zprostředkovává kontejnerizaci. Proto je také ve většině případů většina ostatních nástrojů s Docker srovnávána. Docker se skládá z několika hlavních komponentů, které dohromady tvoří container engine. Mezi tyto komponenty patří
@@ -202,7 +202,7 @@ Docker Client and Server, jak z překladu názvu vyplývá, obsahuje klienta a s
 
 Jednotlivé Docker kontejnery jsou vytvářeny z tzv. Docker Images. Tyto images, neboli v češtině obrazy, obsahují definici všech závislostí a balíčků, potřebných k běhu kontejneru. Způsoby jak vytvářet obrazy jsou dva - buď můžeme definovat vlastní obraz, anebo použít nějakou již vytvořenou předlohu. Nutno podotknout, že každý existující obraz může být předlohou pro nový obraz.\,\cite{turnbull2014docker}
 
-Tyto obrazy následně mohou být uloženy v Docker Registries. Ten slouží jako repositář pro obrazy, který může být buď veřejný, nebo soukromý. Veřejný repositář se nazývá Docker Hub\cite{docker_hub}, kde každý může získat kterýkoliv již vytvořený image, anebo může také nahrát vlastní.\,\cite{turnbull2014docker} 
+Tyto obrazy následně mohou být uloženy v Docker Registries. Ten slouží jako repositář pro obrazy, který může být buď veřejný, nebo soukromý. Veřejný repositář se nazývá Docker Hub\,\cite{docker_hub}, kde každý může získat kterýkoliv již vytvořený veřejný image, anebo může také nahrát vlastní.\,\cite{turnbull2014docker} 
 
 Docker v základu nabízí několik druhů síťových ovladačů, s jejichž pomocí lze efektivně propojit kontejnery mezi sebou. Docker zároveň podporuje implementaci vlastního síťového ovladače.\,\cite{docker_networking_overview}
 

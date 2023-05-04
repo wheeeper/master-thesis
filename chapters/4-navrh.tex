@@ -63,18 +63,18 @@ První položkou v konfiguračním souboru bude položka \inlinecode{label}. Ta 
 
 Další položkou bude položka \inlinecode{containers}. Ta bude obsahovat informace o všech zařízeních, která v daném virtualizovaném prostředí budou. Klíčem každé položky uvnitř této sekce bude název zařízení, které bude fungovat pro referenci daného zařízení. Pro každé zařízení následně půjde definovat tato nastavení: 
 
-\begin{description}
-    \item[build] Definice zařízení, buď za pomoci obrazu (image), nebo cestou k docker souboru (Dockerfile). Toto bude označeno klíčem \inlinecode{image} a \inlinecode{dockerfile}, následovanou požadovanou hodnotou.
-    \item[cap\_add] Seznam \uv{schopností}, v tomto kontextu práv, které bude daný účet na kontejneru mít. Ty budou přidány k právům, která v základu docker dává účtu vytvořenému v kontejneru. 
-    \item[commands] Seznam příkazů, které budou spuštěny v kontejneru.
-    \item[environment] Seznam proměnných, které budou v kontejneru nastaveny. Klíč bude název proměnné a jeho hodnota bude hodnotou proměnné
-    \item[ip\_mapping] Seznam mapování IP adres na domény. Klíčem je název domény a hodnotou je IP adresa, na kterou má daná doména ukazovat.
-    \item[ports] Seznam mapování portů z kontejneru do prostředí hostitelského zařízení. Každý záznam obsahuje dva porty oddělené dvojtečkou, kdy první je port hostitelského zařízení a druhý je port kontejnerizovaného zařízení.
-    \item[privileged] Boolean hodnota, která při hodnotě \inlinecode{true} přiřadí účtu správcovská práva
-    \item[logging] Boolean hodnota, která značí, zdali je komunikace mezi tímto zařízením odposlouchávána. Tedy pokud je hodnota \inlinecode{true}, tak poté knihovna zařídí zaznamenávání všech spojů tohoto zařízení.
-    \item[type] Typ zařízení, které bude vytvořeno. Typy zařízení jsou blíže vysvětleny v sekci \ref{sec:cont_design}.
-    \item[tty] Boolean hodnota, která v původním docker compose značí připojení pseudo-terminálu ke kontejneru, což má za následek to, že kontejner po dokončení definovaných příkazů zůstane běžet. V kontextu knihovny to bude znamenat, že kontejner zůstane po dokončení všech příkazů definovaných v \inlinecode{commands} běžet. 
-\end{description}
+\begin{itemize}
+    \item\inlinecode{build} - Definice zařízení, buď za pomoci obrazu (image), nebo cestou k docker souboru (Dockerfile). Toto bude označeno klíčem \inlinecode{image} a \inlinecode{dockerfile}, následovanou požadovanou hodnotou.
+    \item\inlinecode{cap\_add} - Seznam \uv{schopností}, v tomto kontextu práv, které bude daný účet na kontejneru mít. Ty budou přidány k právům, která v základu docker dává účtu vytvořenému v kontejneru. 
+    \item\inlinecode{commands} - Seznam příkazů, které budou spuštěny v kontejneru.
+    \item\inlinecode{environment} - Seznam proměnných, které budou v kontejneru nastaveny. Klíč bude název proměnné a jeho hodnota bude hodnotou proměnné
+    \item\inlinecode{ip\_mapping} - Seznam mapování IP adres na domény. Klíčem je název domény a hodnotou je IP adresa, na kterou má daná doména ukazovat.
+    \item\inlinecode{ports} - Seznam mapování portů z kontejneru do prostředí hostitelského zařízení. Každý záznam obsahuje dva porty oddělené dvojtečkou, kdy první je port hostitelského zařízení a druhý je port kontejnerizovaného zařízení.
+    \item\inlinecode{privileged} - Boolean hodnota, která při hodnotě \inlinecode{true} přiřadí účtu správcovská práva
+    \item\inlinecode{logging} - Boolean hodnota, která značí, zdali je komunikace mezi tímto zařízením odposlouchávána. Pokud je hodnota \inlinecode{true}, tak poté knihovna zařídí zaznamenávání všech spojů tohoto zařízení.
+    \item\inlinecode{type} - Typ zařízení, které bude vytvořeno. Typy zařízení jsou blíže vysvětleny v sekci \ref{sec:cont_design}.
+    \item\inlinecode{tty} - Boolean hodnota, která v původní definici značí připojení pseudoterminálu ke kontejneru, což má za následek to, že kontejner po dokončení definovaných příkazů zůstane běžet. V kontextu knihovny to bude znamenat, že kontejner zůstane po dokončení všech příkazů definovaných v \inlinecode{commands} běžet. 
+\end{itemize}
 
 V neposlední řadě bude konfigurační soubor obsahovat položku \inlinecode{links}. Ta bude definovat jednotlivá propojení mezi zařízeními, tedy celkovou topologii. V tomto seznamu bude každá položka obsahovat názvy dvou zařízení oddělené dvojtečkou a pro každý záznam bude vytvořeno propojení mezi danými zařízeními.
 

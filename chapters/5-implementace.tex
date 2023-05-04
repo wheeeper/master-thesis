@@ -18,16 +18,16 @@ V předchozí implementaci nebylo potřeba žádné zařízení vytvářet exter
     \item \inlinecode{TestLib} (složka \inlinecode{test\_lib}) - celá testovací knihovna, která mimo jádra testovací služby obsahuje testovací službu, integraci virtualizovaného prostředí a další pomocné entity. Jádro testovací knihovny je přidáno jako závislost. 
 \end{itemize}
 
-S využitím \inlinecode{TestLib.Core} je tedy uživatel připojen k testovací službě, která následně může ovládat testovací běh na zařízení. Obsah je skoro identická s implementací v jazyce \cpp. Nově zde přibyla i implementace v jazyce Python. Ta vznikla z důvodu pohodlnosti testerů, kteří píší velkou část testů právě v tomto jazyce. S její pomocí budou schopni jednodušeji integrovat stávající testy do nové testovací knihovny. 
+Jednotlivá zařízení jsou s využitím jádra testovací knihovny připojena k testovací službě, která následně může ovládat testovací běh na zařízení. Jádro testovací knihovny je implementováno také v jazyce \cpp\, které bylo součástí již přechozí testovací knihovny, a Python. Ta vznikla z důvodu pohodlnosti testerů, kteří píší velkou část testů právě v tomto jazyce. S její pomocí budou schopni jednodušeji integrovat stávající testy do nové testovací knihovny. 
 
 \subsection{Úprava testovací služby}\label{sec:test_service_changes}
 
 S příchodem nové konfigurace virtualizovaného prostředí obdržela i konfigurace testovací služby novou konfiguraci. Konfigurační soubor testovací služby je tedy možné nyní definovat taktéž ve formátu YAML namísto formátu JSON. Konfigurační soubor obsahuje tyto konfigurační možnosti:
 
-\begin{description}
-    \item[ip] - IP, na kterém bude poslouchat testovací služba, výchozí hodnota je \inlinecode{127.0.0.1}
-    \item[port] - port, na kterém bude poslouchat testovací služba, výchozí hodnota je \inlinecode{1337}
-\end{description}
+\begin{itemize}
+    \item \inlinecode{ip} - IP, na kterém bude poslouchat testovací služba, výchozí hodnota je \inlinecode{127.0.0.1}
+    \item \inlinecode{port} - port, na kterém bude poslouchat testovací služba, výchozí hodnota je \inlinecode{1337}
+\end{itemize}
 
 
 Tento konfigurační soubor již není potřeba definovat, pokud jsou výchozí hodnoty dostatečné. V opačném případě lze v konfiguračním souboru definovat pouze ty hodnoty, které je potřeba změnit. 
@@ -60,9 +60,9 @@ Jako první tedy bylo potřeba integrovat komunikaci se softwarem Docker do test
 
 Testovací knihovna je sepsána v jazyce \csharp, proto k vyhledání již existujících řešení byl použit software NuGet\,\cite{nuget}, který slouží jako správce balíčků, tedy externích knihoven, v jazyce \csharp\, a ekosystému .NET. Z dostupných knihoven na první pohled byly nejzajímavějšími knihovny Docker.Dotnet\,\cite{dockerdotnet} a Fluent.Docker\,\cite{fluentdocker}. 
 
-Docker.Dotnet je open-source knihovna vytvořena a spravována .NET Foundation. Tato nezisková organizace, založena společností Microsoft, se stará o zlepšování open-source ekosystému okolo .NET platformy\cite{dotnetfoundation}. Lze ji tedy v podstatě označit jako \uv{oficiální} integraci softwaru Docker do .NET ekosystému, přestože je fakticky komunitním dílem. 
+Docker.Dotnet je open-source knihovna vytvořena a spravována .NET Foundation. Tato nezisková organizace, založena společností Microsoft, se stará o zlepšování open-source ekosystému okolo .NET platformy\,\cite{dotnetfoundation}. Lze ji tedy v podstatě označit jako \uv{oficiální} integraci softwaru Docker do .NET ekosystému, přestože je fakticky komunitním dílem. 
 
-Oproti tomu knihovna Fluent.Docker je open-source knihovna původně od vývojáře Mario Toffia, na které se ale k dnešnímu dni podílelo určitým způsobem již 30 vývojářů. Knihovna se primárně zaměřuje na integraci tzv. Fluent rozhraní, které dovoluje řetězit metody za sebou, díky tomu, že každá metoda vrací instanci třídy, ze které je metoda volána. \cite{fluentinterface}
+Oproti tomu knihovna Fluent.Docker je open-source knihovna původně od vývojáře Mario Toffia, na které se ale k dnešnímu dni podílelo určitým způsobem již 30 vývojářů. Knihovna se primárně zaměřuje na integraci tzv. Fluent rozhraní, které dovoluje řetězit metody za sebou, díky tomu, že každá metoda vrací instanci třídy, ze které je metoda volána.\,\cite{fluentinterface}
 
 Obě knihovny jsou ve spoustě aspektech srovnatelné - obě jsou open-source knihovny vytvořeny komunitou a obě jsou vhodné pro komerční použití. K integraci byla ovšem zvolena knihovna Fluent.Docker. Tato knihovna obsahuje větší abstrakci jednotlivých příkazů a je tedy mnohem jednoduší k použití a integraci.
 
@@ -101,7 +101,7 @@ Po vytvoření všech sítí metoda vypočítá statického směrování pro ka�
 
 Nejbližší cesta do dané sítě je zjišťována za pomoci algoritmu BFS, jenž je implementován ve stejnojmenné metodě. BFS, neboli Breadth first search, funguje na principu prohledávání do šířky. Algoritmus nejdříve obdrží informace o počátečním a konečném zařízení, tedy o uzlech, mezi kterými má nalézt cestu. 
 
-V počátku si algoritmus vytvoří frontu uzlů ke zpracování a seznam navštívených uzlů. Následně je do fronty vložen počáteční uzel a označen jako navštívený. Algoritmus následně ve smyčce skrz všechny položky fronty zkoumá jednotlivé uzly. Po vyjmutí prvního uzlu z fronty algoritmus zkoumá všechny jeho sousední uzly. Pokud sousední uzel ještě nebyl navštíven, tak poté je přidán na konec fronty. Po prozkoumání všech sousedních uzlů algoritmus pokračuje na další položku ve frontě. Součástí jednotlivých položek ve frontě je mimo informace o uzlu, který má být zpracován, také seznam uzlů, který reprezentuje cestu do daného uzlu ke zpracování z počátečního uzlu. V případě, kdy uzel, který má být zpracován, je shodný s koncovým uzlem, je navrácen seznam uzlů reprezentující cestu do koncového uzlu. Pokud není nalezena cesta, poté metoda navrací prázdný seznam. \cite{pruvodce_alogritmu}
+V počátku si algoritmus vytvoří frontu uzlů ke zpracování a seznam navštívených uzlů. Následně je do fronty vložen počáteční uzel a označen jako navštívený. Algoritmus následně ve smyčce skrz všechny položky fronty zkoumá jednotlivé uzly. Po vyjmutí prvního uzlu z fronty algoritmus zkoumá všechny jeho sousední uzly. Pokud sousední uzel ještě nebyl navštíven, tak poté je přidán na konec fronty. Po prozkoumání všech sousedních uzlů algoritmus pokračuje na další položku ve frontě. Součástí jednotlivých položek ve frontě je mimo informace o uzlu, který má být zpracován, také seznam uzlů, který reprezentuje cestu do daného uzlu ke zpracování z počátečního uzlu. V případě, kdy uzel, který má být zpracován, je shodný s koncovým uzlem, je navrácen seznam uzlů reprezentující cestu do koncového uzlu. Pokud není nalezena cesta, poté metoda navrací prázdný seznam.\,\cite{pruvodce_alogritmu}
 
 Ukázkový běh algoritmu můžeme vidět na obrázku \ref{fig:bfs}. Na něm lze vidět jednotlivé iterace algoritmu, kde stav každého uzlu je označen těmito barvami:
 
@@ -122,7 +122,7 @@ Jak je vidět, algoritmus postupně nachází všechny uzly od počátečního d
 \end{figure}
 
 
-Pomocí tohoto algoritmu je tedy zjištěna nejkratší cesta do dané sítě. Tato cesta je nalezena v nejhorším případě v komplexitě $O(|V| + |E|)$, kde $|V|$ je počet uzlů, neboli kontejnerizovaných zařízení, a $|E|$ je počet hran mezi uzly, neboli spojení mezi zařízeními. \cite{pruvodce_alogritmu} Zároveň metoda pro každé zařízení může být volána maximálně $|V| - 1$ krát. Tyto vlastnosti jsou naprosto dostačující pro aktuální použití.
+Pomocí tohoto algoritmu je tedy zjištěna nejkratší cesta do dané sítě. Tato cesta je nalezena v nejhorším případě v komplexitě $O(|V| + |E|)$, kde $|V|$ je počet uzlů, neboli kontejnerizovaných zařízení, a $|E|$ je počet hran mezi uzly, neboli spojení mezi zařízeními.\,\cite{pruvodce_alogritmu} Zároveň metoda pro každé zařízení může být volána maximálně $|V| - 1$ krát. Tyto vlastnosti jsou naprosto dostačující pro aktuální použití.
 
 Metoda tedy navrací seznam zařízení, bez počátečního zařízení, který reprezentuje cestu od počátečního zařízení do cílového zařízení, neboli do dané sítě. Podstatnou informací je první položka v seznamu, tedy to sousední zařízení, kterému musí být zpráva odeslaná z daného zařízení, aby dosáhla cílového. To je nastaveno jako směr, kterým mají být všechny zprávy do dané sítě odesílány. Tímto způsobem implementace je testovací knihovna schopna nastavit všechny požadované topologie. Zároveň vždy odesílá zprávy nejkratší možnou cestou.
 
@@ -180,7 +180,7 @@ Ke správné orchestraci zařízení potřebuje kontejnerizované zařízení ob
     \item \inlinecode{iproute2}
 \end{itemize}
 
-Všechny kontejnery, které budou vycházet z tohoto obrazu, bude možné použít v testovací knihovně. Tento obraz byl zveřejněn ve veřejném repositáři na Docker Hub\cite{docker_hub}, kde je dostupný pod názvem \inlinecode{wheeeper/testlib-ubuntu-base}.
+Všechny kontejnery, které budou vycházet z tohoto obrazu, bude možné použít v testovací knihovně. Tento obraz byl zveřejněn ve veřejném repositáři na Docker Hub\,\cite{docker_hub}, kde je dostupný pod názvem \inlinecode{wheeeper/testlib-ubuntu-base}.
 
 Označení verze obrazu bude kopírovat označení podkladového obrazu operačního systému Ubuntu. Tedy verze bude stejná jako verze operačního systému Ubuntu. 
 
@@ -188,7 +188,7 @@ Následná definice kontejnerů v konfiguračním souboru virtualizovaného pros
 
 \subsection{Odposlouchávání komunikace}
 
-K odposlouchávání komunikace byl vytvořen nový program pod názvem \inlinecode{NetworkLogger}. Program využívá knihovnu SharpPcap\cite{sharppcap} pro zachytávání komunikace na daném virtuálním rozhraní. 
+K odposlouchávání komunikace byl vytvořen nový program pod názvem \inlinecode{NetworkLogger}. Program využívá knihovnu SharpPcap\,\cite{sharppcap} pro zachytávání komunikace na daném virtuálním rozhraní. 
 
 Program přijímá variabilní počet argumentů v závislosti na módu fungování. Program podporuje dva módy fungování
 
@@ -214,10 +214,12 @@ Zaznamenávání sítě je ukončeno při obdržení zprávy o ukončení testu.
 
 \begin{figure}[htbp]
     \centering 
-    \includegraphics[width=0.95\textwidth]{assets/img/activity_networklogger.pdf}
+    \includegraphics[width=0.9\textwidth]{assets/img/activity_networklogger.pdf}
     \caption{Aktivity diagram odposlouchávače komunikace}
     \label{fig:logger_activity}
 \end{figure}
+
+\clearpage
 
 Program má definovaný Dockerfile, vycházející z předem definovaného obrazu \inlinecode{testlib-ubuntu-base}, na jehož základě může být program spuštěn ve virtualizovaném prostředí prostřednictvím softwaru Docker. Ten je oproti původnímu prostředí rozšířen o dvě komponenty:
 
@@ -226,7 +228,7 @@ Program má definovaný Dockerfile, vycházející z předem definovaného obraz
     \item \inlinecode{libpcap-dev} - knihovna k zaznamenávání packetů 
 \end{itemize}
 
-Obraz také využívá obraz \inlinecode{mcr.microsoft.com/dotnet/sdk:6.0}, s jehož pomocí je celý program zkompilován. V základním nastavení je program spuštěn v módu bez připojení k testovací službě. To lze při vytváření kontejneru změnit a tedy program správně nastavit. Daný vytvořený obraz byl zveřejněn ve veřejném repositáři na Docker Hub\cite{docker_hub} a je dostupný pod názvem \inlinecode{wheeeper/networklogger}.
+Obraz také využívá obraz \inlinecode{mcr.microsoft.com/dotnet/sdk:6.0}, s jehož pomocí je celý program zkompilován. V základním nastavení je program spuštěn v módu bez připojení k testovací službě. To lze při vytváření kontejneru změnit a tedy program správně nastavit. Daný vytvořený obraz byl zveřejněn ve veřejném repositáři na Docker Hub\,\cite{docker_hub} a je dostupný pod názvem \inlinecode{wheeeper/networklogger}.
 
 \section{Integrace virtualizovaného prostředí do testovací knihovny}
 

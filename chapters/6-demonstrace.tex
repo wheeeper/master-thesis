@@ -9,7 +9,7 @@ K tomu, aby mohla být testovací knihovna spuštěna, musí mít stroj nainstal
 
 \begin{itemize}
     \item .NET 6 včetně správce balíčků NuGet
-    \item Docker Desktop
+    \item Docker Desktop verze 4.17.1 a vyšší
 \end{itemize}
 
 Zároveň pro Docker Daemon, jenž je součástí Docker Desktop, musí být nastaveny rozmezí IP adres, ve kterých lze vytvářet sítě. To lze upravit v Docker Desktop v nastavení pod kolonkou \inlinecode{Docker Engine}. Možnou ukázku dodatečného nastavení můžeme vidět na výpisu \ref{listing:docker_conf}. Současně se všemi těmito požadavky musí být zaručeno, že v průběhu běhu knihovny nebude spuštěna další instance testovací knihovny.
@@ -37,7 +37,7 @@ Zároveň pro Docker Daemon, jenž je součástí Docker Desktop, musí být nas
 
 Hlavní výhodou nové testovací knihovny je její flexibilita ve vytváření jednotlivých topologií ve virtualizovaném prostředí. Cílem tedy bylo navrhnout test, který by byl lehce škálovatelný a použitelný na všechny topologie. 
 
-Pro komunikaci mezi zařízeními byl zvolen průmyslový protokol ModbusTCP. Všechna komunikace mezi zařízeními bude probíhat dle jeho specifikace. K úspěšné komunikaci tedy bude potřeba právě jeden server a alespoň jeden klient, který bude se serverem komunikovat. Test poté bude probíhat následovně:
+Pro komunikaci mezi zařízeními byl zvolen průmyslový protokol ModbusTCP\,\cite{modbus}. Všechna komunikace mezi zařízeními bude probíhat dle jeho specifikace. K úspěšné komunikaci tedy bude potřeba právě jeden server a alespoň jeden klient, který bude se serverem komunikovat. Test poté bude probíhat následovně:
 
 \begin{enumerate}
     \item Uvnitř testovacího prostředí bude běžet server, který bude přijímat komunikaci.
@@ -55,7 +55,7 @@ K tomu slouží krok 2 a 7, kdy coil registr na adrese 0 slouží jako zámek. P
 
 \section{Implementace testu}\label{sec:python_test_impl}
 
-Implementace testu vyžaduje implementaci dvou zařízení - serveru a klienta. Jazykem implementace pro obě zařízení byl zvolen jazyk Python. Obě zařízení budou pro komunikaci využívat knihovnu pyModbusTCP. Tato knihovna obsahuje implementaci námi požadovaného průmyslového protokolu ModbusTCP, a to jak pro server, tak pro klienta.
+Implementace testu vyžaduje implementaci dvou zařízení - serveru a klienta. Jazykem implementace pro obě zařízení byl zvolen jazyk Python. Obě zařízení budou pro komunikaci využívat knihovnu pyModbusTCP\,\cite{pymodbustcp}. Tato knihovna obsahuje implementaci námi požadovaného průmyslového protokolu ModbusTCP, a to jak pro server, tak pro klienta.
  
 \subsection{Server}
 
@@ -162,7 +162,7 @@ Ke spuštění zařízení ve virtualizovaném prostředí je potřeba definovat
     \item \inlinecode{modbus\_circle} - konfigurace s topologií kruhu
 \end{itemize}
 
-Poté následuje konfigurace počtu očekávaných zařízení. Každá konfigurace bude obsahovat 1 server a 6 klientů. K testovací službě budou připojeni pouze klienti, tedy testovací služba bude očekávat 6 zařízení. Ukázku konfigurace obou položek můžeme vidět na výpisu \ref{listing:conf_devices}
+Poté následuje konfigurace počtu očekávaných zařízení. Každá konfigurace bude obsahovat 1 server a 6 klientů. K testovací službě budou připojeni pouze klienti, tedy testovací služba bude očekávat připojení 6 účastníků testu. Ukázku konfigurace obou položek můžeme vidět na výpisu \ref{listing:conf_devices}
 
 Další položkou v konfiguraci jsou jednotlivá zařízení. Definici jednotlivých zařízení můžeme vidět na výpisu \ref{listing:conf_devices}. Virtualizované prostředí obsahuje dle definice dva typy zařízení - server a klienty. Server je definován pod názvem \inlinecode{modbus\_server}, je typu \inlinecode{default} a je definován v \inlinecode{..\textbackslash server\textbackslash Dockerfile}. V kolonce \inlinecode{commands} pak můžeme vidět příkaz na spuštění zařízení. Server má také nastavenu kolonku \inlinecode{logging} na hodnotu \inlinecode{true}, čímž bude zaručeno zaznamenávání komunikace mezi serverem a klienty.
 
@@ -242,7 +242,7 @@ links:
 
 \section{Testovací projekt}
 
-K tomu, aby mohla být spuštěna testovací knihovna, je zapotřebí vytvořit testovací projekt. Tento projekt musí obsahovat vytvořenou testovací knihovnu a také testovací knihovny MSTest. Projekt je možné vytvořit ze šablon, jenž jsou poskytnuty IDE Visual Studio 2022\,\cite{vs2022}, jenž je využito při vývoji všech .NET komponent. K vytvoření projektu byla použita šablona s názvem \textit{MSTest Test Project}. Do vytvořeného projektu je následně přidána testovací knihovna prostřednictvím správce balíčků NuGet\,\cite{nuget}. 
+K tomu, aby mohla být spuštěna testovací knihovna, je zapotřebí vytvořit testovací projekt. Tento projekt musí obsahovat vytvořenou testovací knihovnu a také testovací knihovnu MSTest. Projekt je možné vytvořit ze šablon, jenž jsou poskytnuty IDE Visual Studio 2022\,\cite{vs2022}, jenž je využito při vývoji všech .NET komponent. K vytvoření projektu byla použita šablona s názvem \textit{MSTest Test Project}. Do vytvořeného projektu je následně přidána testovací knihovna prostřednictvím správce balíčků NuGet\,\cite{nuget}. 
 
 Aby mohl program využívat relativních cest pro všechny cesty konfigurační soubory, je potřeba nakopírovat všechny potřebné soubory do výstupní složky kompilace. K tomu byla do projektového souboru přidána direktiva na zkopírování složky \inlinecode{virtual\_env}, která obsahuje všechny potřebné zdroje. Tuto direktivu můžeme vidět na výpisu \ref{listing:copy_virtual_env}
 
